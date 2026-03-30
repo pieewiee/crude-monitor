@@ -11,7 +11,7 @@ COPY app/ /usr/share/nginx/html/
 
 # Entrypoint script to inject env vars at runtime
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 80
 
