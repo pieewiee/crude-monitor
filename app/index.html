@@ -64,7 +64,12 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 .stat-label{font-family:var(--mono);font-size:.55rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin-bottom:.3rem}
 .stat-val{font-family:var(--mono);font-size:1.6rem;font-weight:700;letter-spacing:-.03em;line-height:1.1}
 .stat-sub{font-size:.7rem;color:var(--ink3);margin-top:.15rem}
-@media(max-width:700px){.stats-row{flex-wrap:wrap}.stat-card{min-width:50%}}
+@media(max-width:700px){
+  .stats-row{flex-wrap:wrap}
+  .stat-card{min-width:50%;border-bottom:1px solid var(--rule)}
+  .stat-card:nth-child(odd):last-child{min-width:100%}
+  .stat-val{font-size:1.2rem}
+}
 
 .dtable{width:100%;border-collapse:collapse;font-size:.8rem}
 .dtable th{font-family:var(--mono);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);text-align:left;padding:.5rem 0;border-bottom:1px solid var(--rule2);font-weight:500}
@@ -122,7 +127,34 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .section,.gcell,.stat-card{animation:fadeIn .4s ease both}
-@media(max-width:700px){.masthead,.section,.gcell{padding:1rem}.stats-row .stat-card{padding:.8rem 1rem}}
+@media(max-width:700px){
+  .masthead,.section,.gcell{padding:.8rem .7rem}
+  .stats-row .stat-card{padding:.7rem .8rem}
+  .ticker{padding:.5rem .7rem;gap:1.2rem}
+  .tabs{flex-wrap:wrap;gap:0}
+  .tab{flex:1;min-width:0;text-align:center;font-size:.55rem;padding:.4rem .5rem}
+  .dtable{font-size:.72rem;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .dtable th,.dtable td{padding:.5rem .3rem}
+  .flow-row{flex-wrap:wrap;gap:.3rem}
+  .flow-bar{max-width:none;flex:1 1 100%;order:5}
+  .flow-from{min-width:70px;font-size:.72rem}
+  .flow-to{min-width:50px;font-size:.72rem}
+  .flow-vol{font-size:.72rem}
+  .crack-step{gap:.5rem}
+  .crack-title{font-size:.76rem}
+  .crack-desc{font-size:.68rem}
+  .mol-tag{font-size:.55rem;padding:1px 4px}
+  .dp-row{flex-wrap:wrap;gap:.2rem}
+  .dp-row-bar{width:80px}
+  .map-tooltip{font-size:.68rem;max-width:180px}
+  .section-header{font-size:.5rem;flex-wrap:wrap;gap:.3rem}
+  .foot{padding:.8rem .7rem;flex-direction:column;gap:.3rem}
+}
+@media(max-width:400px){
+  .stat-card{min-width:100%}
+  .grid-2{grid-template-columns:1fr}
+  .masthead h1{font-size:1.5rem}
+}
 </style>
 </head>
 <body>
@@ -135,7 +167,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 <div class="stats-row" id="stats"></div>
 
 <div class="section">
-  <div class="section-header"><span>Globale &Ouml;lfelder &amp; F&ouml;rderregionen</span><span id="map-info" style="color:var(--accent)">Hover f&uuml;r Details</span></div>
+  <div class="section-header"><span>Globale &Ouml;lfelder &amp; F&ouml;rderregionen</span><span id="map-info" style="color:var(--accent)">Tippen/Hover f&uuml;r Details</span></div>
   <div id="map-container">
     <div class="map-tooltip" id="map-tt"></div>
     <div class="map-legend" id="map-legend"></div>
@@ -253,8 +285,11 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(f
   g.append('circle').attr('r',function(d){return d.sz*.7}).attr('fill',ACC).attr('opacity',.15);
   g.append('circle').attr('r',function(d){return Math.max(2.5,d.sz*.3)}).attr('fill',ACC).attr('opacity',.85).attr('stroke',ACC2).attr('stroke-width',.5);
 
-  g.on('mouseenter',function(ev,d){
-    d3.select(this).select('circle:first-child').transition().duration(200).attr('opacity',.4).attr('r',d.sz);
+  var activeField=null;
+  function showField(el,d){
+    if(activeField)hideField(activeField.el,activeField.d);
+    activeField={el:el,d:d};
+    d3.select(el).select('circle:first-child').transition().duration(200).attr('opacity',.4).attr('r',d.sz);
     var rect=mc.getBoundingClientRect();var p=proj([d.lon,d.lat]);
     tt.style.display='block';
     tt.innerHTML='<div class="tt-name">'+d.name+'</div><div class="tt-detail">'+d.country+'<br>Produktion: '+d.prod+'<br>Typ: '+d.type+'</div>';
@@ -262,10 +297,21 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(f
     if(tx+200>rect.width)tx-=220;
     tt.style.left=tx+'px';tt.style.top=ty+'px';
     document.getElementById('map-info').textContent=d.name+' \u2014 '+d.prod;
-  }).on('mouseleave',function(ev,d){
-    d3.select(this).select('circle:first-child').transition().duration(300).attr('opacity',.15).attr('r',d.sz*.7);
+  }
+  function hideField(el,d){
+    d3.select(el).select('circle:first-child').transition().duration(300).attr('opacity',.15).attr('r',d.sz*.7);
     tt.style.display='none';
-    document.getElementById('map-info').textContent='Hover f\u00fcr Details';
+    document.getElementById('map-info').textContent='Tippen/Hover f\u00fcr Details';
+    activeField=null;
+  }
+  g.on('mouseenter',function(ev,d){showField(this,d)})
+   .on('mouseleave',function(ev,d){hideField(this,d)})
+   .on('click touchstart',function(ev,d){
+     ev.preventDefault();ev.stopPropagation();
+     if(activeField&&activeField.d===d){hideField(this,d)}else{showField(this,d)}
+   });
+  d3.select(mc).on('click touchstart',function(ev){
+    if(ev.target.tagName!=='circle'&&activeField){hideField(activeField.el,activeField.d)}
   });
 });
 
