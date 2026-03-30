@@ -183,6 +183,16 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
   </div>
   <div id="history-loading" style="text-align:center;padding:3rem 0;color:var(--ink3);font-family:var(--mono);font-size:.75rem">Loading price data&hellip;</div>
   <div class="chart-wrap" style="height:340px;display:none" id="history-chart-wrap"><canvas id="historyChart"></canvas></div>
+  <div class="chart-wrap" style="height:120px;display:none;margin-top:.5rem" id="spread-chart-wrap">
+    <div style="font-family:var(--mono);font-size:.55rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin-bottom:.3rem">Brent&ndash;WTI Spread</div>
+    <canvas id="spreadChart"></canvas>
+  </div>
+</div>
+
+<div class="section" id="inventory-section">
+  <div class="section-header"><span>US Crude Oil Inventories</span><span id="inv-info" style="color:var(--ink3)">Weekly commercial stocks &middot; EIA</span></div>
+  <div id="inv-loading" style="text-align:center;padding:2rem 0;color:var(--ink3);font-family:var(--mono);font-size:.75rem">Loading inventory data&hellip;</div>
+  <div class="chart-wrap" style="height:260px;display:none" id="inv-chart-wrap"><canvas id="invChart"></canvas></div>
 </div>
 
 <div class="section">
@@ -251,7 +261,7 @@ var ACC='#d4723c',ACC2='#e8944e',GRN='#4a9e6a',RED='#c4463a',BLU='#4a8cc4',INK='
 document.getElementById('dateStr').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
 /* TICKER */
-var tickers=[{l:'Brent',v:'...',c:'',u:1,id:'brent'},{l:'WTI',v:'...',c:'',u:1,id:'wti'},{l:'Dubai',v:'$76.55',c:'-0.34',u:0},{l:'OPEC Basket',v:'$79.10',c:'+0.56',u:1},{l:'Urals',v:'$65.20',c:'-1.12',u:0},{l:'EUR/USD',v:'1.0842',c:'+0.12%',u:1},{l:'Henry Hub',v:'$2.84',c:'-0.05',u:0}];
+var tickers=[{l:'Brent',v:'...',c:'',u:1,id:'brent'},{l:'WTI',v:'...',c:'',u:1,id:'wti'},{l:'Dubai',v:'$76.55',c:'-0.34',u:0},{l:'OPEC Basket',v:'$79.10',c:'+0.56',u:1},{l:'Urals',v:'$65.20',c:'-1.12',u:0},{l:'EUR/USD',v:'1.0842',c:'+0.12%',u:1},{l:'Henry Hub',v:'...',c:'',u:1}];
 function renderTicker(){document.getElementById('ticker').innerHTML=tickers.map(function(t){return '<div class="tick"><span class="tick-label">'+t.l+'</span><span class="tick-val">'+t.v+'</span>'+(t.c?'<span class="tick-chg '+(t.u?'tick-up':'tick-dn')+'">'+(t.u?'\u25B2':'\u25BC')+' '+t.c+'</span>':'')+'</div>'}).join('')}
 renderTicker();
 function updateTickerFromData(data){
@@ -443,7 +453,9 @@ new Chart(document.getElementById('molChart'),{type:'bar',data:{labels:['Paraffi
 
 /* HISTORICAL PRICE CHART */
 var EIA_BASE='/api/eia/v2/petroleum/pri/spt/data/';
-var historyData=null,historyChart=null,historyRange='Max';
+var EIA_BASE_PET='/api/eia/v2/petroleum/';
+var historyData=null,historyChart=null,spreadChart=null,historyRange='Max';
+var showMA=true;
 var incidents=[
   {date:'1990-08-02',label:'Gulf War',color:RED},
   {date:'1997-07-02',label:'Asian Crisis',color:BLU},
@@ -485,27 +497,42 @@ function buildAnnotations(filtered){
   return anns;
 }
 
+function computeMA(pts,window){
+  var result=[];
+  for(var i=0;i<pts.length;i++){
+    if(i<window-1){result.push(null);continue}
+    var sum=0;for(var j=i-window+1;j<=i;j++)sum+=pts[j].y;
+    result.push({x:pts[i].x,y:sum/window});
+  }
+  return result.filter(function(p){return p!==null});
+}
+
 function renderHistoryChart(){
   var filtered=filterByRange(historyData);
-  var brentPts=[],wtiPts=[];
+  var brentPts=[],wtiPts=[],spreadPts=[];
   filtered.forEach(function(d){
     if(d.brent!=null)brentPts.push({x:d.date,y:d.brent});
     if(d.wti!=null)wtiPts.push({x:d.date,y:d.wti});
+    if(d.brent!=null&&d.wti!=null)spreadPts.push({x:d.date,y:+(d.brent-d.wti).toFixed(2)});
   });
+
+  var datasets=[
+    {label:'Brent',data:brentPts,borderColor:ACC2,backgroundColor:'rgba(232,148,78,.08)',borderWidth:1.5,pointRadius:0,pointHitRadius:4,fill:true,tension:.1,order:2},
+    {label:'WTI',data:wtiPts,borderColor:BLU,backgroundColor:'rgba(74,140,196,.06)',borderWidth:1.5,pointRadius:0,pointHitRadius:4,fill:true,tension:.1,order:3}
+  ];
+  if(showMA&&brentPts.length>200){
+    datasets.push({label:'Brent 50d MA',data:computeMA(brentPts,50),borderColor:'rgba(232,148,78,.45)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:.1,order:1});
+    datasets.push({label:'Brent 200d MA',data:computeMA(brentPts,200),borderColor:'rgba(232,148,78,.25)',borderWidth:1,borderDash:[8,4],pointRadius:0,fill:false,tension:.1,order:0});
+  }
 
   if(historyChart)historyChart.destroy();
   historyChart=new Chart(document.getElementById('historyChart'),{
     type:'line',
-    data:{
-      datasets:[
-        {label:'Brent',data:brentPts,borderColor:ACC2,backgroundColor:'rgba(232,148,78,.08)',borderWidth:1.5,pointRadius:0,pointHitRadius:4,fill:true,tension:.1,order:1},
-        {label:'WTI',data:wtiPts,borderColor:BLU,backgroundColor:'rgba(74,140,196,.06)',borderWidth:1.5,pointRadius:0,pointHitRadius:4,fill:true,tension:.1,order:2}
-      ]
-    },
+    data:{datasets:datasets},
     options:{
       responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{labels:{color:INK3,font:{family:'JetBrains Mono',size:10},boxWidth:10,padding:14}},
+        legend:{labels:{color:INK3,font:{family:'JetBrains Mono',size:10},boxWidth:10,padding:14,filter:function(item){return item.text.indexOf('MA')===-1||showMA}}},
         tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' '+c.dataset.label+': $'+c.parsed.y.toFixed(2)}}},
         annotation:{annotations:buildAnnotations(filtered)}
       },
@@ -515,20 +542,37 @@ function renderHistoryChart(){
       }
     }
   });
+
+  /* SPREAD CHART */
+  document.getElementById('spread-chart-wrap').style.display='block';
+  if(spreadChart)spreadChart.destroy();
+  spreadChart=new Chart(document.getElementById('spreadChart'),{
+    type:'line',
+    data:{datasets:[{label:'Spread',data:spreadPts,borderColor:GRN,backgroundColor:function(ctx){var v=ctx.raw?.y;return v!=null&&v<0?'rgba(196,70,58,.15)':'rgba(74,158,106,.15)'},borderWidth:1,pointRadius:0,fill:true,tension:.1,segment:{borderColor:function(ctx){return ctx.p1.parsed.y<0?RED:GRN}}}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:10},callbacks:{label:function(c){return ' Spread: $'+c.parsed.y.toFixed(2)+'/bbl'}}}},
+      scales:{
+        x:{type:'time',time:{unit:historyRange==='1Y'?'month':historyRange==='5Y'?'quarter':'year'},grid:{color:'#1e1e1c'},ticks:{display:false},border:{color:RULE}},
+        y:{grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:9},callback:function(v){return '$'+v}},border:{color:RULE}}
+      }
+    }
+  });
 }
 
-function fetchEIASeries(seriesId){
+function fetchEIA(baseUrl,seriesId,freq){
+  freq=freq||'daily';
   var all=[],pageSize=5000;
   function fetchPage(offset){
     var params=new URLSearchParams();
     params.append('data[0]','value');
-    params.append('frequency','daily');
+    params.append('frequency',freq);
     params.append('facets[series][]',seriesId);
     params.append('sort[0][column]','period');
     params.append('sort[0][direction]','asc');
     params.append('length',pageSize);
     params.append('offset',offset);
-    return fetch(EIA_BASE+'?'+params).then(function(r){
+    return fetch(baseUrl+'?'+params).then(function(r){
       if(!r.ok)throw new Error('EIA API '+r.status);
       return r.json();
     }).then(function(json){
@@ -541,8 +585,13 @@ function fetchEIASeries(seriesId){
   return fetchPage(0);
 }
 
-Promise.all([fetchEIASeries('RBRTE'),fetchEIASeries('RWTC')]).then(function(results){
-  var brentRows=results[0],wtiRows=results[1];
+/* LOAD PRICES (Brent, WTI, Henry Hub) */
+Promise.all([
+  fetchEIA(EIA_BASE,'RBRTE'),
+  fetchEIA(EIA_BASE,'RWTC'),
+  fetchEIA(EIA_BASE_PET+'sum/snd/data/','WCESTUS1','weekly')
+]).then(function(results){
+  var brentRows=results[0],wtiRows=results[1],invRows=results[2];
   var byDate={};
   brentRows.forEach(function(r){byDate[r.period]={date:r.period,brent:parseFloat(r.value)}});
   wtiRows.forEach(function(r){
@@ -554,9 +603,43 @@ Promise.all([fetchEIASeries('RBRTE'),fetchEIASeries('RWTC')]).then(function(resu
   document.getElementById('history-chart-wrap').style.display='block';
   updateTickerFromData(historyData);
   renderHistoryChart();
+
+  /* INVENTORY CHART */
+  var invPts=invRows.map(function(r){return{x:r.period,y:parseFloat(r.value)/1000}}).filter(function(p){return!isNaN(p.y)});
+  document.getElementById('inv-loading').style.display='none';
+  document.getElementById('inv-chart-wrap').style.display='block';
+  new Chart(document.getElementById('invChart'),{
+    type:'line',
+    data:{datasets:[{label:'US Crude Stocks (M barrels)',data:invPts,borderColor:ACC2,backgroundColor:'rgba(232,148,78,.1)',borderWidth:1.5,pointRadius:0,fill:true,tension:.2}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{color:INK3,font:{family:'JetBrains Mono',size:10},boxWidth:10,padding:14}},
+        tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' '+c.parsed.y.toFixed(1)+'M barrels'}}}
+      },
+      scales:{
+        x:{type:'time',time:{unit:'year',tooltipFormat:'MMM d, yyyy'},grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:10},maxTicksLimit:12},border:{color:RULE}},
+        y:{title:{display:true,text:'Million barrels',color:INK3,font:{family:'JetBrains Mono',size:10}},grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:10}},border:{color:RULE}}
+      }
+    }
+  });
 }).catch(function(err){
-  document.getElementById('history-loading').innerHTML='<span style="color:var(--red)">Failed to load prices: '+err.message+'</span>';
+  document.getElementById('history-loading').innerHTML='<span style="color:var(--red)">Failed to load: '+err.message+'</span>';
+  document.getElementById('inv-loading').innerHTML='<span style="color:var(--red)">Failed to load</span>';
 });
+
+/* HENRY HUB LIVE TICKER */
+fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
+  if(!rows.length)return;
+  var last=rows[rows.length-1],prev=rows.length>1?rows[rows.length-2]:null;
+  var cur=parseFloat(last.value);
+  tickers.forEach(function(t){
+    if(t.l!=='Henry Hub')return;
+    t.v='$'+cur.toFixed(2);
+    if(prev){var chg=cur-parseFloat(prev.value);t.c=(chg>=0?'+':'')+chg.toFixed(2);t.u=chg>=0?1:0}
+  });
+  renderTicker();
+}).catch(function(){});
 </script>
 </body>
 </html>
