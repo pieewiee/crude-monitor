@@ -526,10 +526,10 @@ function fetchEIASeries(seriesId){
 Promise.all([fetchEIASeries('RBRTE'),fetchEIASeries('RWTC')]).then(function(results){
   var brentRows=results[0],wtiRows=results[1];
   var byDate={};
-  brentRows.forEach(function(r){byDate[r.period]={date:r.period,brent:r.value}});
+  brentRows.forEach(function(r){byDate[r.period]={date:r.period,brent:parseFloat(r.value)}});
   wtiRows.forEach(function(r){
     if(!byDate[r.period])byDate[r.period]={date:r.period};
-    byDate[r.period].wti=r.value;
+    byDate[r.period].wti=parseFloat(r.value);
   });
   historyData=Object.values(byDate).sort(function(a,b){return a.date.localeCompare(b.date)});
   document.getElementById('history-loading').style.display='none';
