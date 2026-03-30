@@ -228,9 +228,15 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
   <div class="chart-wrap" style="height:260px;display:none" id="inv-chart-wrap"><canvas id="invChart"></canvas></div>
 </div>
 
-<div class="section reveal" id="analytics-section">
-  <div class="section-header"><span>Brent Monthly Returns Heatmap</span><span style="color:var(--ink3)">% monthly change</span></div>
-  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch" id="heatmap-wrap"></div>
+<div class="grid-2 reveal" id="analytics-section">
+  <div class="gcell">
+    <div class="section-header"><span>Brent Monthly Returns</span><span style="color:var(--ink3)">% change</span></div>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:360px" id="heatmap-wrap"></div>
+  </div>
+  <div class="gcell">
+    <div class="section-header"><span>Seasonal Pattern</span><span style="color:var(--ink3)">Avg. monthly return since 1987</span></div>
+    <div class="chart-wrap" style="height:320px"><canvas id="seasonChart"></canvas></div>
+  </div>
 </div>
 
 <div class="grid-2 reveal">
@@ -732,6 +738,26 @@ Promise.all([
   });
   hmHtml+='</tbody></table>';
   document.getElementById('heatmap-wrap').innerHTML=hmHtml;
+
+  /* 1b. Seasonality bar chart — avg return per month */
+  var monthAvg=[];
+  for(var m=0;m<12;m++){
+    var vals=[];
+    yrs.forEach(function(y){if(years[y]&&years[y][m]!=null)vals.push(years[y][m])});
+    monthAvg.push(vals.length?vals.reduce(function(a,b){return a+b},0)/vals.length:0);
+  }
+  new Chart(document.getElementById('seasonChart'),{
+    type:'bar',
+    data:{labels:months,datasets:[{data:monthAvg,backgroundColor:monthAvg.map(function(v){return v>=0?'rgba(74,158,106,.7)':'rgba(196,70,58,.7)'}),borderWidth:0,borderRadius:2,barPercentage:.7}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' Avg: '+(c.raw>=0?'+':'')+c.raw.toFixed(2)+'%'}}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:INK2,font:{family:'JetBrains Mono',size:10}},border:{color:RULE}},
+        y:{grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:9},callback:function(v){return (v>=0?'+':'')+v.toFixed(1)+'%'}},border:{color:RULE}}
+      }
+    }
+  });
 
   /* 2. 30-day rolling volatility */
   var dailyReturns=[];
