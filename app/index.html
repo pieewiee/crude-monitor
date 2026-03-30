@@ -133,6 +133,32 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 
 .foot{padding:1rem 2rem;font-family:var(--mono);font-size:.55rem;color:var(--ink4);letter-spacing:.08em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
 
+/* SPARKLINES */
+.tick-spark{display:inline-block;vertical-align:middle;margin-left:4px}
+
+/* HEADER SHINE */
+.masthead{position:relative;overflow:hidden}
+.masthead::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(212,114,60,.04),transparent);animation:headerShine 8s ease-in-out infinite}
+@keyframes headerShine{0%,100%{left:-100%}50%{left:140%}}
+
+/* GLOW ON LIVE VALUES */
+.tick-val.live{text-shadow:0 0 8px rgba(212,114,60,.4)}
+.stat-val.live{text-shadow:0 0 12px rgba(212,114,60,.3)}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* STAT COUNT-UP FLASH */
+@keyframes countFlash{from{color:var(--accent2)}to{color:var(--ink)}}
+.stat-val.flash{animation:countFlash .8s ease}
+
+/* SUBTLE BORDER GLOW ON CHART SECTIONS */
+#history-section{border-left:2px solid transparent;transition:border-color .4s}
+#history-section:hover{border-left-color:var(--accent)}
+#inventory-section{border-left:2px solid transparent;transition:border-color .4s}
+#inventory-section:hover{border-left-color:var(--accent)}
+
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .section,.gcell,.stat-card{animation:fadeIn .4s ease both}
 @media(max-width:700px){
@@ -174,7 +200,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 <div class="ticker" id="ticker"></div>
 <div class="stats-row" id="stats"></div>
 
-<div class="section" id="history-section">
+<div class="section reveal" id="history-section">
   <div class="section-header"><span>Historical Benchmark Prices</span><span id="history-info" style="color:var(--ink3)">Brent &amp; WTI daily spot &middot; EIA</span></div>
   <div class="tabs" id="history-tabs">
     <button class="tab" onclick="setHistoryRange('1Y')">1Y</button>
@@ -189,13 +215,13 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
   </div>
 </div>
 
-<div class="section" id="inventory-section">
+<div class="section reveal" id="inventory-section">
   <div class="section-header"><span>US Crude Oil Inventories</span><span id="inv-info" style="color:var(--ink3)">Weekly commercial stocks &middot; EIA</span></div>
   <div id="inv-loading" style="text-align:center;padding:2rem 0;color:var(--ink3);font-family:var(--mono);font-size:.75rem">Loading inventory data&hellip;</div>
   <div class="chart-wrap" style="height:260px;display:none" id="inv-chart-wrap"><canvas id="invChart"></canvas></div>
 </div>
 
-<div class="section">
+<div class="section reveal">
   <div class="section-header"><span>Global Oil Fields &amp; Production Regions</span><span id="map-info" style="color:var(--accent)">Tap / hover for details</span></div>
   <div id="map-container">
     <div class="map-tooltip" id="map-tt"></div>
@@ -203,7 +229,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
   </div>
 </div>
 
-<div class="grid-2">
+<div class="grid-2 reveal">
   <div class="gcell">
     <div class="section-header"><span>Atmospheric Distillation</span><span>Click for details</span></div>
     <table class="dtable"><thead><tr><th>Fraction</th><th class="r">Temp.</th><th style="width:80px"></th><th class="r">Share</th></tr></thead><tbody id="frac-tbody"></tbody></table>
@@ -216,7 +242,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
   </div>
 </div>
 
-<div class="grid-2">
+<div class="grid-2 reveal">
   <div class="gcell">
     <div class="section-header"><span>What One Barrel Yields</span><span>1 bbl = 42 gal &rarr; ~45 gal output</span></div>
     <div class="chart-wrap" style="height:240px"><canvas id="barrelChart"></canvas></div>
@@ -228,7 +254,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
   </div>
 </div>
 
-<div class="grid-2">
+<div class="grid-2 reveal">
   <div class="gcell">
     <div class="section-header"><span>Catalytic Cracking (FCC)</span></div>
     <div class="section-sub">Breaking heavy molecules into lighter products</div>
@@ -241,7 +267,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
   </div>
 </div>
 
-<div class="section">
+<div class="section reveal">
   <div class="section-header"><span>Molecular Composition &mdash; Light vs. Heavy</span></div>
   <div class="chart-wrap" style="height:220px"><canvas id="molChart"></canvas></div>
 </div>
@@ -260,19 +286,37 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 var ACC='#d4723c',ACC2='#e8944e',GRN='#4a9e6a',RED='#c4463a',BLU='#4a8cc4',INK='#e8e5dd',INK2='#b0ada4',INK3='#7a776f',BG4='#242422',RULE='#2a2a27';
 document.getElementById('dateStr').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
+/* SCROLL REVEAL */
+var revealObs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');revealObs.unobserve(e.target)}})},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(function(el){revealObs.observe(el)});
+
+/* SPARKLINE HELPER — draws tiny SVG inline chart */
+function sparkSVG(pts,color,w,h){
+  if(!pts||pts.length<2)return '';
+  var mn=Infinity,mx=-Infinity;
+  pts.forEach(function(v){if(v<mn)mn=v;if(v>mx)mx=v});
+  var range=mx-mn||1;
+  var coords=pts.map(function(v,i){return (i/(pts.length-1)*w).toFixed(1)+','+(h-((v-mn)/range)*h).toFixed(1)}).join(' ');
+  return '<svg class="tick-spark" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><polyline points="'+coords+'" fill="none" stroke="'+color+'" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
 /* TICKER */
 var tickers=[{l:'Brent',v:'...',c:'',u:1,id:'brent'},{l:'WTI',v:'...',c:'',u:1,id:'wti'},{l:'Dubai',v:'$76.55',c:'-0.34',u:0},{l:'OPEC Basket',v:'$79.10',c:'+0.56',u:1},{l:'Urals',v:'$65.20',c:'-1.12',u:0},{l:'EUR/USD',v:'1.0842',c:'+0.12%',u:1},{l:'Henry Hub',v:'...',c:'',u:1}];
-function renderTicker(){document.getElementById('ticker').innerHTML=tickers.map(function(t){return '<div class="tick"><span class="tick-label">'+t.l+'</span><span class="tick-val">'+t.v+'</span>'+(t.c?'<span class="tick-chg '+(t.u?'tick-up':'tick-dn')+'">'+(t.u?'\u25B2':'\u25BC')+' '+t.c+'</span>':'')+'</div>'}).join('')}
+function renderTicker(){document.getElementById('ticker').innerHTML=tickers.map(function(t){return '<div class="tick"><span class="tick-label">'+t.l+'</span><span class="tick-val'+(t.spark?' live':'')+'">'+t.v+'</span>'+(t.spark||'')+(t.c?'<span class="tick-chg '+(t.u?'tick-up':'tick-dn')+'">'+(t.u?'\u25B2':'\u25BC')+' '+t.c+'</span>':'')+'</div>'}).join('')}
 renderTicker();
 function updateTickerFromData(data){
   if(!data||data.length<2)return;
   var last=null,prev=null;
   for(var i=data.length-1;i>=0;i--){if(data[i].brent!=null&&data[i].wti!=null){if(!last)last=data[i];else if(!prev){prev=data[i];break}}}
   if(!last||!prev)return;
+  /* Last 30 trading days for sparklines */
+  var tail=data.slice(-30);
+  var brentSpark=tail.map(function(d){return d.brent}).filter(function(v){return v!=null});
+  var wtiSpark=tail.map(function(d){return d.wti}).filter(function(v){return v!=null});
   tickers.forEach(function(t){
     var cur,old;
-    if(t.id==='brent'){cur=last.brent;old=prev.brent}
-    else if(t.id==='wti'){cur=last.wti;old=prev.wti}
+    if(t.id==='brent'){cur=last.brent;old=prev.brent;t.spark=sparkSVG(brentSpark,ACC2,40,14)}
+    else if(t.id==='wti'){cur=last.wti;old=prev.wti;t.spark=sparkSVG(wtiSpark,BLU,40,14)}
     else return;
     var chg=cur-old;
     t.v='$'+cur.toFixed(2);
@@ -280,11 +324,13 @@ function updateTickerFromData(data){
     t.u=chg>=0?1:0;
   });
   renderTicker();
+  /* Flash stat cards */
+  document.querySelectorAll('.stat-val').forEach(function(el){el.classList.add('flash')});
 }
 
 /* STATS */
 var statsData=[['Global Supply','106.2M','bbl/d (IEA 2025)'],['Top Producer','USA','13.6M bbl/d'],['Top Exporter','Saudi','7.4M bbl/d'],['Top Importer','China','11.6M bbl/d'],['Brent','...','per barrel']];
-function renderStats(){document.getElementById('stats').innerHTML=statsData.map(function(s){return '<div class="stat-card"><div class="stat-label">'+s[0]+'</div><div class="stat-val">'+s[1]+'</div><div class="stat-sub">'+s[2]+'</div></div>'}).join('')}
+function renderStats(){document.getElementById('stats').innerHTML=statsData.map(function(s,i){return '<div class="stat-card"><div class="stat-label">'+s[0]+'</div><div class="stat-val'+(i===4&&s[1]!=='...'?' live':'')+'">'+s[1]+'</div><div class="stat-sub">'+s[2]+'</div></div>'}).join('')}
 renderStats();
 
 /* MAP */
