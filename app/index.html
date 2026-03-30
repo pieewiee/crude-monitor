@@ -283,7 +283,9 @@ function updateTickerFromData(data){
 }
 
 /* STATS */
-document.getElementById('stats').innerHTML=[['Global Production','102.2M','Barrels/day (2024)'],['Traded Volume','48M','bbl/d (~47%)'],['Top Exporter','Saudi','7.3M bbl/d'],['Top Importer','China','11.4M bbl/d'],['Brent Benchmark','$78','per barrel']].map(function(s){return '<div class="stat-card"><div class="stat-label">'+s[0]+'</div><div class="stat-val">'+s[1]+'</div><div class="stat-sub">'+s[2]+'</div></div>'}).join('');
+var statsData=[['Global Supply','106.2M','bbl/d (IEA 2025)'],['Top Producer','USA','13.6M bbl/d'],['Top Exporter','Saudi','7.4M bbl/d'],['Top Importer','China','11.6M bbl/d'],['Brent','...','per barrel']];
+function renderStats(){document.getElementById('stats').innerHTML=statsData.map(function(s){return '<div class="stat-card"><div class="stat-label">'+s[0]+'</div><div class="stat-val">'+s[1]+'</div><div class="stat-sub">'+s[2]+'</div></div>'}).join('')}
+renderStats();
 
 /* MAP */
 var oilFields=[
@@ -604,6 +606,8 @@ Promise.all([
   document.getElementById('history-loading').style.display='none';
   document.getElementById('history-chart-wrap').style.display='block';
   updateTickerFromData(historyData);
+  var latest=historyData[historyData.length-1];
+  if(latest&&latest.brent!=null){statsData[4][1]='$'+latest.brent.toFixed(2);statsData[4][2]='per barrel ('+latest.date+')';renderStats()}
   renderHistoryChart();
 
   /* INVENTORY CHART */
