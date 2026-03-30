@@ -1,0 +1,5 @@
+name = "oil-price-api"
+main = "index.js"
+compatibility_date = "2024-09-25"
+
+# EIA_API_KEY must be set via: wrangler secret put EIA_API_KEY
