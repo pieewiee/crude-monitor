@@ -1,4 +1,6 @@
 #!/bin/sh
-# Inject EIA_API_KEY env var into the HTML at container start
-sed -i "s|__EIA_API_KEY__|${EIA_API_KEY:-}|g" /usr/share/nginx/html/index.html
+# Write runtime config from env vars
+cat > /usr/share/nginx/html/config.json <<JSON
+{"eiaApiKey":"${EIA_API_KEY:-}"}
+JSON
 exec nginx -g 'daemon off;'

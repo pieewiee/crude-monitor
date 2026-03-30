@@ -424,7 +424,7 @@ switchTrade(0);
 new Chart(document.getElementById('molChart'),{type:'bar',data:{labels:['Paraffins (Alkanes)','Naphthenes (Cycloalkanes)','Aromatics','Resins & Asphaltenes'],datasets:[{label:'Light Oil (WTI)',data:[75,15,8,2],backgroundColor:BLU,borderWidth:0,borderRadius:1,barPercentage:.7,categoryPercentage:.6},{label:'Heavy Oil (Maya)',data:[35,25,20,20],backgroundColor:RED,borderWidth:0,borderRadius:1,barPercentage:.7,categoryPercentage:.6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:INK3,font:{family:'JetBrains Mono',size:10},boxWidth:8,padding:16}},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.raw+'%'}}}},scales:{y:{max:80,grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:10},callback:function(v){return v+'%'}},border:{color:RULE}},x:{grid:{display:false},ticks:{color:INK2,font:{family:'Instrument Sans',size:11}},border:{color:RULE}}}}});
 
 /* HISTORICAL PRICE CHART */
-var EIA_KEY='__EIA_API_KEY__';
+var EIA_KEY='';
 var EIA_BASE='/api/eia/v2/petroleum/pri/spt/data/';
 var historyData=null,historyChart=null,historyRange='Max';
 var incidents=[
@@ -538,7 +538,10 @@ function loadHistoryData(){
     document.getElementById('history-loading').innerHTML='<span style="color:var(--red)">Failed to load prices: '+err.message+'</span>';
   });
 }
-loadHistoryData();
+fetch('/config.json').then(function(r){return r.json()}).then(function(cfg){
+  EIA_KEY=cfg.eiaApiKey||'';
+  loadHistoryData();
+}).catch(function(){loadHistoryData()});
 </script>
 </body>
 </html>
