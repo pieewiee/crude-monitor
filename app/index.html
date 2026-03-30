@@ -153,6 +153,13 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 @keyframes countFlash{from{color:var(--accent2)}to{color:var(--ink)}}
 .stat-val.flash{animation:countFlash .8s ease}
 
+/* HEATMAP */
+.heatmap{border-collapse:collapse;font-family:var(--mono);font-size:.55rem}
+.heatmap th{padding:3px 6px;color:var(--ink3);font-weight:500;text-align:center;position:sticky;top:0;background:var(--bg)}
+.heatmap th:first-child{text-align:left;position:sticky;left:0;z-index:2;background:var(--bg)}
+.heatmap td{padding:3px 6px;text-align:center;min-width:38px;border:1px solid var(--bg)}
+.heatmap td:first-child{font-weight:600;color:var(--ink2);text-align:left;background:var(--bg);position:sticky;left:0;border:none}
+
 /* SUBTLE BORDER GLOW ON CHART SECTIONS */
 #history-section{border-left:2px solid transparent;transition:border-color .4s}
 #history-section:hover{border-left-color:var(--accent)}
@@ -219,6 +226,22 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
   <div class="section-header"><span>US Crude Oil Inventories</span><span id="inv-info" style="color:var(--ink3)">Weekly commercial stocks &middot; EIA</span></div>
   <div id="inv-loading" style="text-align:center;padding:2rem 0;color:var(--ink3);font-family:var(--mono);font-size:.75rem">Loading inventory data&hellip;</div>
   <div class="chart-wrap" style="height:260px;display:none" id="inv-chart-wrap"><canvas id="invChart"></canvas></div>
+</div>
+
+<div class="section reveal" id="analytics-section">
+  <div class="section-header"><span>Brent Monthly Returns Heatmap</span><span style="color:var(--ink3)">% monthly change</span></div>
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch" id="heatmap-wrap"></div>
+</div>
+
+<div class="grid-2 reveal">
+  <div class="gcell">
+    <div class="section-header"><span>30-Day Rolling Volatility</span><span style="color:var(--ink3)">Annualized %</span></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="volChart"></canvas></div>
+  </div>
+  <div class="gcell">
+    <div class="section-header"><span>Daily Returns Distribution</span><span style="color:var(--ink3)">Brent % change</span></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="histogramChart"></canvas></div>
+  </div>
 </div>
 
 <div class="section reveal">
@@ -675,6 +698,93 @@ Promise.all([
       }
     }
   });
+  /* ANALYTICS — computed from historyData (Brent) */
+  var brentOnly=historyData.filter(function(d){return d.brent!=null});
+
+  /* 1. Monthly returns heatmap */
+  var monthlyByYM={};
+  brentOnly.forEach(function(d){
+    var ym=d.date.slice(0,7);
+    if(!monthlyByYM[ym])monthlyByYM[ym]={first:d.brent,last:d.brent};
+    monthlyByYM[ym].last=d.brent;
+  });
+  var years={},months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  Object.keys(monthlyByYM).forEach(function(ym){
+    var y=ym.slice(0,4),m=parseInt(ym.slice(5,7))-1;
+    var r=((monthlyByYM[ym].last-monthlyByYM[ym].first)/monthlyByYM[ym].first*100);
+    if(!years[y])years[y]=[];
+    years[y][m]=r;
+  });
+  var yrs=Object.keys(years).sort();
+  function hmColor(v){
+    if(v==null)return 'transparent';
+    var a=Math.min(Math.abs(v)/15,1);
+    return v>=0?'rgba(74,158,106,'+(.15+a*.6)+')':'rgba(196,70,58,'+(.15+a*.6)+')';
+  }
+  var hmHtml='<table class="heatmap"><thead><tr><th></th>'+months.map(function(m){return '<th>'+m+'</th>'}).join('')+'</tr></thead><tbody>';
+  yrs.forEach(function(y){
+    hmHtml+='<tr><td>'+y+'</td>';
+    for(var m=0;m<12;m++){
+      var v=years[y]?years[y][m]:null;
+      hmHtml+='<td style="background:'+hmColor(v)+';color:'+(v!=null?'var(--ink)':'transparent')+'">'+(v!=null?v.toFixed(1):'')+'</td>';
+    }
+    hmHtml+='</tr>';
+  });
+  hmHtml+='</tbody></table>';
+  document.getElementById('heatmap-wrap').innerHTML=hmHtml;
+
+  /* 2. 30-day rolling volatility */
+  var dailyReturns=[];
+  for(var i=1;i<brentOnly.length;i++){
+    var ret=(brentOnly[i].brent-brentOnly[i-1].brent)/brentOnly[i-1].brent;
+    dailyReturns.push({date:brentOnly[i].date,ret:ret});
+  }
+  var volPts=[];
+  for(var i=29;i<dailyReturns.length;i++){
+    var slice=dailyReturns.slice(i-29,i+1);
+    var mean=slice.reduce(function(s,d){return s+d.ret},0)/30;
+    var variance=slice.reduce(function(s,d){return s+Math.pow(d.ret-mean,2)},0)/29;
+    var annVol=Math.sqrt(variance)*Math.sqrt(252)*100;
+    volPts.push({x:dailyReturns[i].date,y:annVol});
+  }
+  new Chart(document.getElementById('volChart'),{
+    type:'line',
+    data:{datasets:[{label:'30d Volatility',data:volPts,borderColor:ACC2,backgroundColor:'rgba(232,148,78,.08)',borderWidth:1.2,pointRadius:0,fill:true,tension:.2}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:10},callbacks:{label:function(c){return ' '+c.parsed.y.toFixed(1)+'% annualized'}}}},
+      scales:{
+        x:{type:'time',time:{unit:'year',tooltipFormat:'MMM d, yyyy'},grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:9},maxTicksLimit:10},border:{color:RULE}},
+        y:{title:{display:true,text:'%',color:INK3,font:{family:'JetBrains Mono',size:9}},grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:9}},border:{color:RULE}}
+      }
+    }
+  });
+
+  /* 3. Daily returns histogram */
+  var retPcts=dailyReturns.map(function(d){return d.ret*100});
+  var binSize=0.5,binMin=-8,binMax=8;
+  var bins=[];
+  for(var b=binMin;b<binMax;b+=binSize){bins.push({lo:b,hi:b+binSize,count:0,label:(b+binSize/2).toFixed(1)+'%'})}
+  retPcts.forEach(function(r){
+    var idx=Math.floor((r-binMin)/binSize);
+    if(idx>=0&&idx<bins.length)bins[idx].count++;
+  });
+  var binLabels=bins.map(function(b){return b.label});
+  var binCounts=bins.map(function(b){return b.count});
+  var binColors=bins.map(function(b){return(b.lo+b.hi)/2>=0?'rgba(74,158,106,.7)':'rgba(196,70,58,.7)'});
+  new Chart(document.getElementById('histogramChart'),{
+    type:'bar',
+    data:{labels:binLabels,datasets:[{data:binCounts,backgroundColor:binColors,borderWidth:0,barPercentage:1,categoryPercentage:1}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:10},callbacks:{title:function(items){return items[0].label+' return'},label:function(c){return ' '+c.raw+' days'}}}},
+      scales:{
+        x:{title:{display:true,text:'Daily return %',color:INK3,font:{family:'JetBrains Mono',size:9}},grid:{display:false},ticks:{color:INK3,font:{family:'JetBrains Mono',size:8},maxTicksLimit:10},border:{color:RULE}},
+        y:{title:{display:true,text:'Days',color:INK3,font:{family:'JetBrains Mono',size:9}},grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:9}},border:{color:RULE}}
+      }
+    }
+  });
+
 }).catch(function(err){
   document.getElementById('history-loading').innerHTML='<span style="color:var(--red)">Failed to load: '+err.message+'</span>';
   document.getElementById('inv-loading').innerHTML='<span style="color:var(--red)">Failed to load</span>';
