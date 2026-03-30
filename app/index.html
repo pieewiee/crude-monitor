@@ -591,7 +591,7 @@ function fetchEIA(baseUrl,seriesId,freq){
 Promise.all([
   fetchEIA(EIA_BASE,'RBRTE'),
   fetchEIA(EIA_BASE,'RWTC'),
-  fetchEIA(EIA_BASE_PET+'sum/snd/data/','WCESTUS1','weekly')
+  fetchEIA(EIA_BASE_PET+'stoc/wstk/data/','WCESTUS1','weekly')
 ]).then(function(results){
   var brentRows=results[0],wtiRows=results[1],invRows=results[2];
   var byDate={};
