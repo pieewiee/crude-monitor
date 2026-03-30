@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRUDE — Erdöl &amp; Raffinerie Monitor</title>
+<title>CRUDE — Oil &amp; Refinery Monitor</title>
+<meta name="description" content="Interactive crude oil dashboard — global oil fields, refinery distillation, benchmark grades, trade flows and molecular composition.">
+<meta name="theme-color" content="#0c0c0b">
+<meta property="og:title" content="CRUDE — Oil & Refinery Monitor">
+<meta property="og:description" content="Interactive crude oil dashboard with global production data, refinery processes and trade flows.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23e8944e'/%3E%3Cstop offset='100%25' stop-color='%23d4723c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='14' fill='%230c0c0b' stroke='%23d4723c' stroke-width='1.5'/%3E%3Cpath d='M16 6 Q12 14 12 18 A4 4 0 0 0 20 18 Q20 14 16 6Z' fill='url(%23g)'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -30,6 +36,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 .masthead h1{font-family:var(--serif);font-size:clamp(1.8rem,4.5vw,2.8rem);letter-spacing:-.03em;line-height:1;color:var(--ink)}
 .masthead h1 span{font-style:italic;color:var(--accent)}
 .masthead-meta{font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;color:var(--ink3);text-align:right;line-height:1.8}
+.live-dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:5px;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 .ticker{border-bottom:1px solid var(--rule);padding:.5rem 2rem;display:flex;gap:1.8rem;overflow-x:auto;font-family:var(--mono);font-size:.7rem;scrollbar-width:none;background:var(--bg2)}
 .ticker::-webkit-scrollbar{display:none}
@@ -161,13 +169,13 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 
 <header class="masthead">
   <h1>CRUDE <span>&middot;</span> Monitor</h1>
-  <div class="masthead-meta">Erd&ouml;l &amp; Raffinerie Dashboard<br><span id="dateStr"></span></div>
+  <div class="masthead-meta"><span class="live-dot"></span>Oil &amp; Refinery Dashboard<br><span id="dateStr"></span></div>
 </header>
 <div class="ticker" id="ticker"></div>
 <div class="stats-row" id="stats"></div>
 
 <div class="section">
-  <div class="section-header"><span>Globale &Ouml;lfelder &amp; F&ouml;rderregionen</span><span id="map-info" style="color:var(--accent)">Tippen/Hover f&uuml;r Details</span></div>
+  <div class="section-header"><span>Global Oil Fields &amp; Production Regions</span><span id="map-info" style="color:var(--accent)">Tap / hover for details</span></div>
   <div id="map-container">
     <div class="map-tooltip" id="map-tt"></div>
     <div class="map-legend" id="map-legend"></div>
@@ -176,24 +184,24 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 
 <div class="grid-2">
   <div class="gcell">
-    <div class="section-header"><span>Atmosph&auml;rische Destillation</span><span>Klicken f&uuml;r Details</span></div>
-    <table class="dtable"><thead><tr><th>Fraktion</th><th class="r">Temp.</th><th style="width:80px"></th><th class="r">Anteil</th></tr></thead><tbody id="frac-tbody"></tbody></table>
+    <div class="section-header"><span>Atmospheric Distillation</span><span>Click for details</span></div>
+    <table class="dtable"><thead><tr><th>Fraction</th><th class="r">Temp.</th><th style="width:80px"></th><th class="r">Share</th></tr></thead><tbody id="frac-tbody"></tbody></table>
     <div class="detail-panel" id="frac-detail"></div>
   </div>
   <div class="gcell">
-    <div class="section-header"><span>Benchmark Crude Oils</span><span>API&deg; / Schwefel%</span></div>
-    <table class="dtable"><thead><tr><th>Sorte</th><th>Typ</th><th class="r">API</th><th class="r">S%</th></tr></thead><tbody id="crude-tbody"></tbody></table>
+    <div class="section-header"><span>Benchmark Crude Oils</span><span>API&deg; / Sulfur%</span></div>
+    <table class="dtable"><thead><tr><th>Grade</th><th>Type</th><th class="r">API</th><th class="r">S%</th></tr></thead><tbody id="crude-tbody"></tbody></table>
     <div class="detail-panel" id="crude-detail"></div>
   </div>
 </div>
 
 <div class="grid-2">
   <div class="gcell">
-    <div class="section-header"><span>Was aus einem Barrel wird</span><span>1 Barrel = 159 L &rarr; ~170 L Output</span></div>
+    <div class="section-header"><span>What One Barrel Yields</span><span>1 bbl = 42 gal &rarr; ~45 gal output</span></div>
     <div class="chart-wrap" style="height:240px"><canvas id="barrelChart"></canvas></div>
   </div>
   <div class="gcell">
-    <div class="section-header"><span>Raffinerieausbeute nach Sorte</span></div>
+    <div class="section-header"><span>Refinery Yield by Grade</span></div>
     <div class="tabs" id="yield-tabs"></div>
     <div class="chart-wrap" style="height:220px"><canvas id="yieldChart"></canvas></div>
   </div>
@@ -201,24 +209,24 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 
 <div class="grid-2">
   <div class="gcell">
-    <div class="section-header"><span>Katalytisches Cracken (FCC)</span></div>
-    <div class="section-sub">Schwere Molek&uuml;le in leichte Produkte aufbrechen</div>
+    <div class="section-header"><span>Catalytic Cracking (FCC)</span></div>
+    <div class="section-sub">Breaking heavy molecules into lighter products</div>
     <div id="cracking"></div>
   </div>
   <div class="gcell">
-    <div class="section-header"><span>Gr&ouml;&szlig;te Handelsstr&ouml;me</span><span>Mio. b/d</span></div>
+    <div class="section-header"><span>Major Trade Flows</span><span>M bbl/d</span></div>
     <div class="tabs" id="trade-tabs"></div>
     <div id="trade-list"></div>
   </div>
 </div>
 
 <div class="section">
-  <div class="section-header"><span>Molekulare Zusammensetzung &mdash; Leicht vs. Schwer</span></div>
+  <div class="section-header"><span>Molecular Composition &mdash; Light vs. Heavy</span></div>
   <div class="chart-wrap" style="height:220px"><canvas id="molChart"></canvas></div>
 </div>
 
 <footer class="foot">
-  <span>CRUDE Monitor &mdash; illustrative Daten &middot; keine Anlageberatung</span>
+  <span>CRUDE Monitor &mdash; illustrative data &middot; not investment advice</span>
   <span>nginx &middot; Docker &middot; GitHub Actions</span>
 </footer>
 
@@ -227,43 +235,43 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 var ACC='#d4723c',ACC2='#e8944e',GRN='#4a9e6a',RED='#c4463a',BLU='#4a8cc4',INK='#e8e5dd',INK2='#b0ada4',INK3='#7a776f',BG4='#242422',RULE='#2a2a27';
-document.getElementById('dateStr').textContent=new Date().toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+document.getElementById('dateStr').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
 /* TICKER */
-var tickers=[{l:'Brent',v:'$78.42',c:'+1.23',u:1},{l:'WTI',v:'$74.18',c:'+0.87',u:1},{l:'Dubai',v:'$76.55',c:'-0.34',u:0},{l:'OPEC Korb',v:'$79.10',c:'+0.56',u:1},{l:'Urals',v:'$65.20',c:'-1.12',u:0},{l:'EUR/USD',v:'1.0842',c:'+0.12%',u:1},{l:'Henry Hub',v:'$2.84',c:'-0.05',u:0}];
+var tickers=[{l:'Brent',v:'$78.42',c:'+1.23',u:1},{l:'WTI',v:'$74.18',c:'+0.87',u:1},{l:'Dubai',v:'$76.55',c:'-0.34',u:0},{l:'OPEC Basket',v:'$79.10',c:'+0.56',u:1},{l:'Urals',v:'$65.20',c:'-1.12',u:0},{l:'EUR/USD',v:'1.0842',c:'+0.12%',u:1},{l:'Henry Hub',v:'$2.84',c:'-0.05',u:0}];
 document.getElementById('ticker').innerHTML=tickers.map(function(t){return '<div class="tick"><span class="tick-label">'+t.l+'</span><span class="tick-val">'+t.v+'</span><span class="tick-chg '+(t.u?'tick-up':'tick-dn')+'">'+(t.u?'\u25B2':'\u25BC')+' '+t.c+'</span></div>'}).join('');
 
 /* STATS */
-document.getElementById('stats').innerHTML=[['Weltproduktion','102.2M','Barrel/Tag (2024)'],['Davon gehandelt','48M','b/d (~47%)'],['Top Exporteur','Saudi','7.3 Mio. b/d'],['Top Importeur','China','11.4 Mio. b/d'],['Brent Benchmark','$78','pro Barrel']].map(function(s){return '<div class="stat-card"><div class="stat-label">'+s[0]+'</div><div class="stat-val">'+s[1]+'</div><div class="stat-sub">'+s[2]+'</div></div>'}).join('');
+document.getElementById('stats').innerHTML=[['Global Production','102.2M','Barrels/day (2024)'],['Traded Volume','48M','bbl/d (~47%)'],['Top Exporter','Saudi','7.3M bbl/d'],['Top Importer','China','11.4M bbl/d'],['Brent Benchmark','$78','per barrel']].map(function(s){return '<div class="stat-card"><div class="stat-label">'+s[0]+'</div><div class="stat-val">'+s[1]+'</div><div class="stat-sub">'+s[2]+'</div></div>'}).join('');
 
 /* MAP */
 var oilFields=[
-  {name:'Ghawar',country:'Saudi-Arabien',prod:'3.8 Mio. b/d',type:'Onshore',lat:25.4,lon:49.3,sz:14},
-  {name:'Safaniya',country:'Saudi-Arabien',prod:'1.5 Mio. b/d',type:'Offshore',lat:28.0,lon:49.0,sz:9},
-  {name:'Burgan',country:'Kuwait',prod:'1.7 Mio. b/d',type:'Onshore',lat:29.0,lon:47.9,sz:10},
-  {name:'Rumaila',country:'Irak',prod:'1.5 Mio. b/d',type:'Onshore',lat:30.5,lon:47.3,sz:9},
-  {name:'Permian Basin',country:'USA',prod:'6.2 Mio. b/d',type:'Shale',lat:31.9,lon:-102.1,sz:16},
-  {name:'Eagle Ford',country:'USA',prod:'1.2 Mio. b/d',type:'Shale',lat:28.7,lon:-98.5,sz:8},
-  {name:'Bakken',country:'USA',prod:'1.2 Mio. b/d',type:'Shale',lat:48.2,lon:-103.5,sz:8},
-  {name:'Prudhoe Bay',country:'Alaska',prod:'0.3 Mio. b/d',type:'Arktis',lat:70.3,lon:-148.7,sz:5},
-  {name:'Brent / Forties',country:'UK Nordsee',prod:'0.4 Mio. b/d',type:'Offshore',lat:61.0,lon:1.7,sz:6},
-  {name:'Ekofisk',country:'Norwegen',prod:'0.3 Mio. b/d',type:'Offshore',lat:56.5,lon:3.2,sz:5},
-  {name:'Johan Sverdrup',country:'Norwegen',prod:'0.75 Mio. b/d',type:'Offshore',lat:58.9,lon:2.5,sz:7},
-  {name:'Westsibirien',country:'Russland',prod:'6.0 Mio. b/d',type:'Onshore',lat:62.0,lon:70.0,sz:15},
-  {name:'Samotlor',country:'Russland',prod:'0.5 Mio. b/d',type:'Onshore',lat:61.2,lon:76.7,sz:6},
-  {name:'Cantarell',country:'Mexiko',prod:'0.15 Mio. b/d',type:'Offshore',lat:19.8,lon:-92.3,sz:4},
-  {name:'Ku-Maloob-Zaap',country:'Mexiko',prod:'0.7 Mio. b/d',type:'Offshore',lat:19.5,lon:-92.0,sz:7},
-  {name:'Lula (Tupi)',country:'Brasilien',prod:'1.0 Mio. b/d',type:'Pre-Salt',lat:-25.2,lon:-42.8,sz:8},
-  {name:'Buzios',country:'Brasilien',prod:'0.6 Mio. b/d',type:'Pre-Salt',lat:-24.5,lon:-42.0,sz:6},
-  {name:'Niger Delta',country:'Nigeria',prod:'1.2 Mio. b/d',type:'Onshore/Offshore',lat:4.5,lon:6.5,sz:8},
-  {name:'Hassi Messaoud',country:'Algerien',prod:'0.4 Mio. b/d',type:'Onshore',lat:31.7,lon:6.1,sz:6},
-  {name:'Sharara',country:'Libyen',prod:'0.3 Mio. b/d',type:'Onshore',lat:26.4,lon:12.6,sz:5},
-  {name:'Kashagan',country:'Kasachstan',prod:'0.4 Mio. b/d',type:'Kaspisch',lat:46.3,lon:51.5,sz:6},
-  {name:'Tengiz',country:'Kasachstan',prod:'0.6 Mio. b/d',type:'Onshore',lat:46.2,lon:53.4,sz:6},
-  {name:'Daqing',country:'China',prod:'0.3 Mio. b/d',type:'Onshore',lat:46.6,lon:125.0,sz:5},
-  {name:'Alberta Oil Sands',country:'Kanada',prod:'3.5 Mio. b/d',type:'Oelsand',lat:57.0,lon:-111.5,sz:13},
-  {name:'Upper Zakum',country:'VAE',prod:'1.0 Mio. b/d',type:'Offshore',lat:24.8,lon:53.5,sz:8},
-  {name:'South Pars',country:'Iran',prod:'0.6 Mio. b/d',type:'Offshore',lat:27.5,lon:52.5,sz:6}
+  {name:'Ghawar',country:'Saudi Arabia',prod:'3.8M bbl/d',type:'Onshore',lat:25.4,lon:49.3,sz:14},
+  {name:'Safaniya',country:'Saudi Arabia',prod:'1.5M bbl/d',type:'Offshore',lat:28.0,lon:49.0,sz:9},
+  {name:'Burgan',country:'Kuwait',prod:'1.7M bbl/d',type:'Onshore',lat:29.0,lon:47.9,sz:10},
+  {name:'Rumaila',country:'Iraq',prod:'1.5M bbl/d',type:'Onshore',lat:30.5,lon:47.3,sz:9},
+  {name:'Permian Basin',country:'USA',prod:'6.2M bbl/d',type:'Shale',lat:31.9,lon:-102.1,sz:16},
+  {name:'Eagle Ford',country:'USA',prod:'1.2M bbl/d',type:'Shale',lat:28.7,lon:-98.5,sz:8},
+  {name:'Bakken',country:'USA',prod:'1.2M bbl/d',type:'Shale',lat:48.2,lon:-103.5,sz:8},
+  {name:'Prudhoe Bay',country:'Alaska',prod:'0.3M bbl/d',type:'Arctic',lat:70.3,lon:-148.7,sz:5},
+  {name:'Brent / Forties',country:'UK North Sea',prod:'0.4M bbl/d',type:'Offshore',lat:61.0,lon:1.7,sz:6},
+  {name:'Ekofisk',country:'Norway',prod:'0.3M bbl/d',type:'Offshore',lat:56.5,lon:3.2,sz:5},
+  {name:'Johan Sverdrup',country:'Norway',prod:'0.75M bbl/d',type:'Offshore',lat:58.9,lon:2.5,sz:7},
+  {name:'West Siberia',country:'Russia',prod:'6.0M bbl/d',type:'Onshore',lat:62.0,lon:70.0,sz:15},
+  {name:'Samotlor',country:'Russia',prod:'0.5M bbl/d',type:'Onshore',lat:61.2,lon:76.7,sz:6},
+  {name:'Cantarell',country:'Mexico',prod:'0.15M bbl/d',type:'Offshore',lat:19.8,lon:-92.3,sz:4},
+  {name:'Ku-Maloob-Zaap',country:'Mexico',prod:'0.7M bbl/d',type:'Offshore',lat:19.5,lon:-92.0,sz:7},
+  {name:'Lula (Tupi)',country:'Brazil',prod:'1.0M bbl/d',type:'Pre-Salt',lat:-25.2,lon:-42.8,sz:8},
+  {name:'Buzios',country:'Brazil',prod:'0.6M bbl/d',type:'Pre-Salt',lat:-24.5,lon:-42.0,sz:6},
+  {name:'Niger Delta',country:'Nigeria',prod:'1.2M bbl/d',type:'Onshore/Offshore',lat:4.5,lon:6.5,sz:8},
+  {name:'Hassi Messaoud',country:'Algeria',prod:'0.4M bbl/d',type:'Onshore',lat:31.7,lon:6.1,sz:6},
+  {name:'Sharara',country:'Libya',prod:'0.3M bbl/d',type:'Onshore',lat:26.4,lon:12.6,sz:5},
+  {name:'Kashagan',country:'Kazakhstan',prod:'0.4M bbl/d',type:'Caspian',lat:46.3,lon:51.5,sz:6},
+  {name:'Tengiz',country:'Kazakhstan',prod:'0.6M bbl/d',type:'Onshore',lat:46.2,lon:53.4,sz:6},
+  {name:'Daqing',country:'China',prod:'0.3M bbl/d',type:'Onshore',lat:46.6,lon:125.0,sz:5},
+  {name:'Alberta Oil Sands',country:'Canada',prod:'3.5M bbl/d',type:'Oil Sands',lat:57.0,lon:-111.5,sz:13},
+  {name:'Upper Zakum',country:'UAE',prod:'1.0M bbl/d',type:'Offshore',lat:24.8,lon:53.5,sz:8},
+  {name:'South Pars',country:'Iran',prod:'0.6M bbl/d',type:'Offshore',lat:27.5,lon:52.5,sz:6}
 ];
 
 var mapW=960,mapH=480;
@@ -292,7 +300,7 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(f
     d3.select(el).select('circle:first-child').transition().duration(200).attr('opacity',.4).attr('r',d.sz);
     var rect=mc.getBoundingClientRect();var p=proj([d.lon,d.lat]);
     tt.style.display='block';
-    tt.innerHTML='<div class="tt-name">'+d.name+'</div><div class="tt-detail">'+d.country+'<br>Produktion: '+d.prod+'<br>Typ: '+d.type+'</div>';
+    tt.innerHTML='<div class="tt-name">'+d.name+'</div><div class="tt-detail">'+d.country+'<br>Production: '+d.prod+'<br>Type: '+d.type+'</div>';
     var tx=p[0]/mapW*rect.width+12;var ty=p[1]/mapH*rect.height-20;
     if(tx+200>rect.width)tx-=220;
     tt.style.left=tx+'px';tt.style.top=ty+'px';
@@ -301,7 +309,7 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(f
   function hideField(el,d){
     d3.select(el).select('circle:first-child').transition().duration(300).attr('opacity',.15).attr('r',d.sz*.7);
     tt.style.display='none';
-    document.getElementById('map-info').textContent='Tippen/Hover f\u00fcr Details';
+    document.getElementById('map-info').textContent='Tap / hover for details';
     activeField=null;
   }
   g.on('mouseenter',function(ev,d){showField(this,d)})
@@ -315,17 +323,17 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(f
   });
 });
 
-document.getElementById('map-legend').innerHTML=[{c:ACC,l:'> 3 Mio. b/d',o:'1'},{c:ACC,l:'1\u20133 Mio. b/d',o:'.5'},{c:ACC,l:'< 1 Mio. b/d',o:'.3'}].map(function(x){return '<div class="map-legend-item"><div class="map-legend-dot" style="background:'+x.c+';opacity:'+x.o+'"></div>'+x.l+'</div>'}).join('');
+document.getElementById('map-legend').innerHTML=[{c:ACC,l:'> 3M bbl/d',o:'1'},{c:ACC,l:'1\u20133M bbl/d',o:'.5'},{c:ACC,l:'< 1M bbl/d',o:'.3'}].map(function(x){return '<div class="map-legend-item"><div class="map-legend-dot" style="background:'+x.c+';opacity:'+x.o+'"></div>'+x.l+'</div>'}).join('');
 
 /* FRACTIONS */
 var fracs=[
-  {n:'Raffineriegas',t:'< 25\u00b0C',p:2,c:'#6a7a8a',k:'C\u2081\u2013C\u2084',d:'Methan, Ethan, Propan, Butan. Gasf\u00f6rmig bei Raumtemperatur. Heizgas, LPG-Flaschen, Petrochemie-Feedstock.'},
-  {n:'Leichtbenzin (Naphtha)',t:'25\u201380\u00b0C',p:8,c:'#5a9ab5',k:'C\u2085\u2013C\u2086',d:'Fl\u00fcchtige Fl\u00fcssigkeit. Hauptrohstoff der Petrochemie \u2014 Kunststoffe, L\u00f6sungsmittel, Grundchemikalien.'},
-  {n:'Schwerbenzin',t:'80\u2013180\u00b0C',p:22,c:ACC2,k:'C\u2087\u2013C\u2081\u2081',d:'Benzinfraktion. Wird durch katalytisches Reforming auf Oktanzahl 95+ veredelt. Super E5/E10.'},
-  {n:'Kerosin',t:'180\u2013250\u00b0C',p:13,c:'#c49a4a',k:'C\u2081\u2082\u2013C\u2081\u2085',d:'Jet A-1 Flugkraftstoff. Muss bei -47\u00b0C flie\u00dfen \u2014 Kristallbildung in 10 km H\u00f6he w\u00e4re fatal.'},
-  {n:'Diesel / Gas\u00f6l',t:'250\u2013350\u00b0C',p:25,c:'#a07840',k:'C\u2081\u2086\u2013C\u2082\u2080',d:'Wichtigste Fraktion in Europa. Entschwefelt auf < 10 ppm. Diesel, Heiz\u00f6l leicht, Schiffsdiesel.'},
-  {n:'Schwer\u00f6l',t:'350\u2013500\u00b0C',p:18,c:'#7a5a3a',k:'C\u2082\u2081\u2013C\u2084\u2085',d:'Zu viskos f\u00fcr Motoren. FCC-Cracker oder Hydrocracker. Alternativ: Schiffstreibstoff (HFO).'},
-  {n:'R\u00fcckstand (Bitumen)',t:'> 500\u00b0C',p:12,c:'#4a3a2a',k:'C\u2084\u2085+',d:'Sumpf des Turms. Asphaltene, Metalle, Schwefel. Asphalt, Dachpappe, Petrolkoks, Schmierfette.'}
+  {n:'Refinery Gas',t:'< 25\u00b0C',p:2,c:'#6a7a8a',k:'C\u2081\u2013C\u2084',d:'Methane, ethane, propane, butane. Gaseous at room temperature. Used for heating gas, LPG cylinders and petrochemical feedstock.'},
+  {n:'Light Naphtha',t:'25\u201380\u00b0C',p:8,c:'#5a9ab5',k:'C\u2085\u2013C\u2086',d:'Volatile liquid. Primary feedstock for petrochemistry \u2014 plastics, solvents, base chemicals.'},
+  {n:'Heavy Naphtha',t:'80\u2013180\u00b0C',p:22,c:ACC2,k:'C\u2087\u2013C\u2081\u2081',d:'Gasoline fraction. Upgraded via catalytic reforming to 95+ octane. Premium unleaded fuel.'},
+  {n:'Kerosene',t:'180\u2013250\u00b0C',p:13,c:'#c49a4a',k:'C\u2081\u2082\u2013C\u2081\u2085',d:'Jet A-1 aviation fuel. Must flow at -47\u00b0C \u2014 crystal formation at 33,000 ft would be catastrophic.'},
+  {n:'Diesel / Gas Oil',t:'250\u2013350\u00b0C',p:25,c:'#a07840',k:'C\u2081\u2086\u2013C\u2082\u2080',d:'Most important fraction in many markets. Desulfurized to < 10 ppm. Diesel, light heating oil, marine diesel.'},
+  {n:'Heavy Fuel Oil',t:'350\u2013500\u00b0C',p:18,c:'#7a5a3a',k:'C\u2082\u2081\u2013C\u2084\u2085',d:'Too viscous for engines. Fed to FCC crackers or hydrocrackers. Alternatively used as marine bunker fuel (HFO).'},
+  {n:'Residue (Bitumen)',t:'> 500\u00b0C',p:12,c:'#4a3a2a',k:'C\u2084\u2085+',d:'Bottom of the tower. Asphaltenes, metals, sulfur. Used for asphalt, roofing, petroleum coke, lubricating greases.'}
 ];
 var ftb=document.getElementById('frac-tbody'),fd=document.getElementById('frac-detail'),af=-1;
 fracs.forEach(function(f,i){
@@ -337,14 +345,14 @@ fracs.forEach(function(f,i){
 
 /* CRUDE OILS */
 var crudes=[
-  {n:'Brent',r:'Nordsee',api:38.3,s:0.37,t:'Light Sweet',c:BLU,y:{b:28,k:13,d:26,sw:12,l:6,x:15}},
+  {n:'Brent',r:'North Sea',api:38.3,s:0.37,t:'Light Sweet',c:BLU,y:{b:28,k:13,d:26,sw:12,l:6,x:15}},
   {n:'WTI',r:'USA (Texas)',api:39.6,s:0.24,t:'Light Sweet',c:GRN,y:{b:30,k:14,d:25,sw:10,l:7,x:14}},
-  {n:'Dubai/Oman',r:'Mittl. Osten',api:31.0,s:2.0,t:'Medium Sour',c:'#a08050',y:{b:20,k:11,d:24,sw:22,l:5,x:18}},
-  {n:'Arab Light',r:'Saudi-Arabien',api:33.0,s:1.77,t:'Medium Sour',c:ACC,y:{b:22,k:12,d:25,sw:18,l:5,x:18}},
-  {n:'Arab Heavy',r:'Saudi-Arabien',api:27.0,s:2.8,t:'Heavy Sour',c:'#8b4a3a',y:{b:16,k:9,d:22,sw:28,l:4,x:21}},
-  {n:'Urals',r:'Russland',api:31.7,s:1.35,t:'Medium Sour',c:'#7a6ab5',y:{b:21,k:11,d:25,sw:20,l:5,x:18}},
+  {n:'Dubai/Oman',r:'Middle East',api:31.0,s:2.0,t:'Medium Sour',c:'#a08050',y:{b:20,k:11,d:24,sw:22,l:5,x:18}},
+  {n:'Arab Light',r:'Saudi Arabia',api:33.0,s:1.77,t:'Medium Sour',c:ACC,y:{b:22,k:12,d:25,sw:18,l:5,x:18}},
+  {n:'Arab Heavy',r:'Saudi Arabia',api:27.0,s:2.8,t:'Heavy Sour',c:'#8b4a3a',y:{b:16,k:9,d:22,sw:28,l:4,x:21}},
+  {n:'Urals',r:'Russia',api:31.7,s:1.35,t:'Medium Sour',c:'#7a6ab5',y:{b:21,k:11,d:25,sw:20,l:5,x:18}},
   {n:'Bonny Light',r:'Nigeria',api:35.4,s:0.14,t:'Light Sweet',c:GRN,y:{b:26,k:15,d:27,sw:11,l:6,x:15}},
-  {n:'Maya',r:'Mexiko',api:22.0,s:3.3,t:'Heavy Sour',c:RED,y:{b:14,k:7,d:20,sw:32,l:3,x:24}}
+  {n:'Maya',r:'Mexico',api:22.0,s:3.3,t:'Heavy Sour',c:RED,y:{b:14,k:7,d:20,sw:32,l:3,x:24}}
 ];
 var ctb=document.getElementById('crude-tbody'),cd=document.getElementById('crude-detail'),ac=-1;
 crudes.forEach(function(cr,i){
@@ -353,8 +361,8 @@ crudes.forEach(function(cr,i){
   tr.onclick=function(){
     ctb.querySelectorAll('tr').forEach(function(r){r.classList.remove('active')});
     if(ac===i){ac=-1;cd.classList.remove('open');return}ac=i;tr.classList.add('active');cd.classList.add('open');
-    var yl=['Benzin/Naphtha','Kerosin','Diesel','Schwer\u00f6l','LPG','Rest'],yv=[cr.y.b,cr.y.k,cr.y.d,cr.y.sw,cr.y.l,cr.y.x];
-    var h='<div class="dp-title">'+cr.n+'</div><div class="dp-sub">'+cr.r+' \u00b7 API '+cr.api+'\u00b0 \u00b7 Schwefel '+cr.s+'%</div>';
+    var yl=['Gasoline/Naphtha','Kerosene','Diesel','Heavy Fuel Oil','LPG','Residuals'],yv=[cr.y.b,cr.y.k,cr.y.d,cr.y.sw,cr.y.l,cr.y.x];
+    var h='<div class="dp-title">'+cr.n+'</div><div class="dp-sub">'+cr.r+' \u00b7 API '+cr.api+'\u00b0 \u00b7 Sulfur '+cr.s+'%</div>';
     yl.forEach(function(l,j){h+='<div class="dp-row"><span class="dp-row-label">'+l+'</span><div class="dp-row-bar"><div class="bar-sm"><div class="bar-sm-fill" style="width:'+(yv[j]*3)+'%;background:'+cr.c+'"></div></div></div><span class="dp-row-val">'+yv[j]+'%</span></div>'});
     cd.innerHTML=h;
   };
@@ -362,7 +370,7 @@ crudes.forEach(function(cr,i){
 });
 
 /* BARREL CHART */
-new Chart(document.getElementById('barrelChart'),{type:'bar',data:{labels:['Benzin & Naphtha','Diesel & Heiz\u00f6l','Kerosin (Jet)','Fl\u00fcssiggas (LPG)','Schwer\u00f6l & Rest','Sonstige'],datasets:[{data:[46,27,10,6,7,4],backgroundColor:[ACC2,'#a07840','#5a9ab5',GRN,'#7a5a3a',INK3],borderWidth:0,barThickness:20,borderRadius:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' '+c.raw+'% eines Barrels'}}}},scales:{x:{max:50,grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:10},callback:function(v){return v+'%'}},border:{color:RULE}},y:{grid:{display:false},ticks:{color:INK2,font:{family:'Instrument Sans',size:12,weight:500}},border:{color:RULE}}}}});
+new Chart(document.getElementById('barrelChart'),{type:'bar',data:{labels:['Gasoline & Naphtha','Diesel & Heating Oil','Kerosene (Jet)','Liquefied Gas (LPG)','Heavy Oil & Residue','Other'],datasets:[{data:[46,27,10,6,7,4],backgroundColor:[ACC2,'#a07840','#5a9ab5',GRN,'#7a5a3a',INK3],borderWidth:0,barThickness:20,borderRadius:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' '+c.raw+'% of one barrel'}}}},scales:{x:{max:50,grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:10},callback:function(v){return v+'%'}},border:{color:RULE}},y:{grid:{display:false},ticks:{color:INK2,font:{family:'Instrument Sans',size:12,weight:500}},border:{color:RULE}}}}});
 
 /* YIELD CHART */
 var yieldNames=['Brent','WTI','Maya','Arab Heavy','Bonny Light','Urals'];
@@ -371,7 +379,7 @@ document.getElementById('yield-tabs').innerHTML=yieldNames.map(function(n,i){ret
 function switchYield(idx){
   document.querySelectorAll('#yield-tabs .tab').forEach(function(t,j){t.classList.toggle('active',j===idx)});
   var cr=crudes.find(function(c){return c.n===yieldNames[idx]});if(!cr)return;
-  var labels=['Benzin','Kerosin','Diesel','Schwer\u00f6l','LPG','Rest'];
+  var labels=['Gasoline','Kerosene','Diesel','Heavy Oil','LPG','Residuals'];
   var vals=[cr.y.b,cr.y.k,cr.y.d,cr.y.sw,cr.y.l,cr.y.x];
   var colors=[ACC2,'#5a9ab5','#a07840','#7a5a3a',GRN,INK3];
   if(yieldChart)yieldChart.destroy();
@@ -381,16 +389,16 @@ switchYield(0);
 
 /* CRACKING */
 document.getElementById('cracking').innerHTML=[
-  {t:'Schweres Gas\u00f6l zuf\u00fchren',d:'C\u2082\u2080\u2013C\u2084\u2085 \u2014 viel zu lang f\u00fcr Benzin oder Diesel.',m:'<span class="mol-tag mol-heavy">C\u2083\u2085H\u2087\u2082</span>'},
-  {t:'Erhitzen auf ~500\u00b0C',d:'Verdampfung im Riser-Reaktor. Extreme Hitze destabilisiert C\u2013C Bindungen.',m:''},
-  {t:'Zeolith-Katalysator',d:'Saure Stellen im Kristallgitter greifen die langen Ketten an.',m:'<span class="mol-tag mol-cat">Zeolith Y-Typ</span>'},
-  {t:'Bindungsbruch',d:'Ein Molek\u00fcl zerf\u00e4llt in 3\u20135 kleinere \u2014 in Sekundenbruchteilen.',m:'<span class="mol-tag mol-heavy">C\u2083\u2085H\u2087\u2082</span> <span style="color:var(--ink3);font-family:var(--mono);font-size:.7rem">\u2192</span> <span class="mol-tag mol-light">C\u2088H\u2081\u2088</span> <span class="mol-tag mol-light">C\u2083H\u2086</span> <span class="mol-tag mol-light">C\u2084H\u2088</span>'},
-  {t:'Fraktionierung',d:'Gecrackte Produkte getrennt. Verkokster Katalysator bei 700\u00b0C regeneriert.',m:'<span class="mol-tag mol-light">~45% Benzin</span> <span class="mol-tag mol-light">~25% Diesel</span> <span class="mol-tag mol-heavy">~15% Koks</span>'}
+  {t:'Feed heavy gas oil',d:'C\u2082\u2080\u2013C\u2084\u2085 \u2014 far too long-chain for gasoline or diesel.',m:'<span class="mol-tag mol-heavy">C\u2083\u2085H\u2087\u2082</span>'},
+  {t:'Heat to ~500\u00b0C',d:'Vaporization in the riser reactor. Extreme heat destabilizes C\u2013C bonds.',m:''},
+  {t:'Zeolite catalyst',d:'Acid sites in the crystal lattice attack the long hydrocarbon chains.',m:'<span class="mol-tag mol-cat">Zeolite Y-type</span>'},
+  {t:'Bond scission',d:'One molecule breaks into 3\u20135 smaller ones \u2014 in fractions of a second.',m:'<span class="mol-tag mol-heavy">C\u2083\u2085H\u2087\u2082</span> <span style="color:var(--ink3);font-family:var(--mono);font-size:.7rem">\u2192</span> <span class="mol-tag mol-light">C\u2088H\u2081\u2088</span> <span class="mol-tag mol-light">C\u2083H\u2086</span> <span class="mol-tag mol-light">C\u2084H\u2088</span>'},
+  {t:'Fractionation',d:'Cracked products separated. Coked catalyst regenerated at 700\u00b0C.',m:'<span class="mol-tag mol-light">~45% Gasoline</span> <span class="mol-tag mol-light">~25% Diesel</span> <span class="mol-tag mol-heavy">~15% Coke</span>'}
 ].map(function(s,i){return '<div class="crack-step"><div class="crack-nr">'+(i+1)+'</div><div style="flex:1"><div class="crack-title">'+s.t+'</div><div class="crack-desc">'+s.d+'</div>'+(s.m?'<div style="margin-top:3px">'+s.m+'</div>':'')+'</div></div>'}).join('');
 
 /* TRADE FLOWS */
-var tradeData={exp:[{f:'Kanada',t:'USA',v:3.7},{f:'Saudi-Ar.',t:'China',v:2.0},{f:'Russland',t:'China',v:1.7},{f:'Russland',t:'Indien',v:1.4},{f:'USA',t:'EU',v:1.2},{f:'Norwegen',t:'EU',v:1.2},{f:'Irak',t:'China',v:1.0},{f:'VAE',t:'Japan',v:0.7},{f:'Nigeria',t:'EU',v:0.5}],imp:[{f:'China',t:'(ges.)',v:11.4},{f:'EU',t:'(ges.)',v:9.2},{f:'Indien',t:'(ges.)',v:4.7},{f:'S\u00fcdkorea',t:'(ges.)',v:2.8},{f:'Japan',t:'(ges.)',v:2.5},{f:'USA',t:'(netto)',v:2.1}]};
-document.getElementById('trade-tabs').innerHTML='<button class="tab active" onclick="switchTrade(0)">Handelspaare</button><button class="tab" onclick="switchTrade(1)">Top Importeure</button>';
+var tradeData={exp:[{f:'Canada',t:'USA',v:3.7},{f:'Saudi',t:'China',v:2.0},{f:'Russia',t:'China',v:1.7},{f:'Russia',t:'India',v:1.4},{f:'USA',t:'EU',v:1.2},{f:'Norway',t:'EU',v:1.2},{f:'Iraq',t:'China',v:1.0},{f:'UAE',t:'Japan',v:0.7},{f:'Nigeria',t:'EU',v:0.5}],imp:[{f:'China',t:'(total)',v:11.4},{f:'EU',t:'(total)',v:9.2},{f:'India',t:'(total)',v:4.7},{f:'S. Korea',t:'(total)',v:2.8},{f:'Japan',t:'(total)',v:2.5},{f:'USA',t:'(net)',v:2.1}]};
+document.getElementById('trade-tabs').innerHTML='<button class="tab active" onclick="switchTrade(0)">Trade Pairs</button><button class="tab" onclick="switchTrade(1)">Top Importers</button>';
 function switchTrade(idx){
   document.querySelectorAll('#trade-tabs .tab').forEach(function(t,j){t.classList.toggle('active',j===idx)});
   var data=idx===0?tradeData.exp:tradeData.imp;
@@ -400,7 +408,7 @@ function switchTrade(idx){
 switchTrade(0);
 
 /* MOLECULE CHART */
-new Chart(document.getElementById('molChart'),{type:'bar',data:{labels:['Paraffine (Alkane)','Naphthene (Cycloalkane)','Aromaten','Harze & Asphaltene'],datasets:[{label:'Leichtes \u00d6l (WTI)',data:[75,15,8,2],backgroundColor:BLU,borderWidth:0,borderRadius:1,barPercentage:.7,categoryPercentage:.6},{label:'Schweres \u00d6l (Maya)',data:[35,25,20,20],backgroundColor:RED,borderWidth:0,borderRadius:1,barPercentage:.7,categoryPercentage:.6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:INK3,font:{family:'JetBrains Mono',size:10},boxWidth:8,padding:16}},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.raw+'%'}}}},scales:{y:{max:80,grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:10},callback:function(v){return v+'%'}},border:{color:RULE}},x:{grid:{display:false},ticks:{color:INK2,font:{family:'Instrument Sans',size:11}},border:{color:RULE}}}}});
+new Chart(document.getElementById('molChart'),{type:'bar',data:{labels:['Paraffins (Alkanes)','Naphthenes (Cycloalkanes)','Aromatics','Resins & Asphaltenes'],datasets:[{label:'Light Oil (WTI)',data:[75,15,8,2],backgroundColor:BLU,borderWidth:0,borderRadius:1,barPercentage:.7,categoryPercentage:.6},{label:'Heavy Oil (Maya)',data:[35,25,20,20],backgroundColor:RED,borderWidth:0,borderRadius:1,barPercentage:.7,categoryPercentage:.6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:INK3,font:{family:'JetBrains Mono',size:10},boxWidth:8,padding:16}},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.raw+'%'}}}},scales:{y:{max:80,grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:10},callback:function(v){return v+'%'}},border:{color:RULE}},x:{grid:{display:false},ticks:{color:INK2,font:{family:'Instrument Sans',size:11}},border:{color:RULE}}}}});
 </script>
 </body>
 </html>
