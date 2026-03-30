@@ -4,6 +4,7 @@ FROM nginx:1.27-alpine
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy custom nginx config
+COPY cache.conf /etc/nginx/conf.d/cache.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy app

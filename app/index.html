@@ -251,8 +251,26 @@ var ACC='#d4723c',ACC2='#e8944e',GRN='#4a9e6a',RED='#c4463a',BLU='#4a8cc4',INK='
 document.getElementById('dateStr').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
 /* TICKER */
-var tickers=[{l:'Brent',v:'$78.42',c:'+1.23',u:1},{l:'WTI',v:'$74.18',c:'+0.87',u:1},{l:'Dubai',v:'$76.55',c:'-0.34',u:0},{l:'OPEC Basket',v:'$79.10',c:'+0.56',u:1},{l:'Urals',v:'$65.20',c:'-1.12',u:0},{l:'EUR/USD',v:'1.0842',c:'+0.12%',u:1},{l:'Henry Hub',v:'$2.84',c:'-0.05',u:0}];
-document.getElementById('ticker').innerHTML=tickers.map(function(t){return '<div class="tick"><span class="tick-label">'+t.l+'</span><span class="tick-val">'+t.v+'</span><span class="tick-chg '+(t.u?'tick-up':'tick-dn')+'">'+(t.u?'\u25B2':'\u25BC')+' '+t.c+'</span></div>'}).join('');
+var tickers=[{l:'Brent',v:'...',c:'',u:1,id:'brent'},{l:'WTI',v:'...',c:'',u:1,id:'wti'},{l:'Dubai',v:'$76.55',c:'-0.34',u:0},{l:'OPEC Basket',v:'$79.10',c:'+0.56',u:1},{l:'Urals',v:'$65.20',c:'-1.12',u:0},{l:'EUR/USD',v:'1.0842',c:'+0.12%',u:1},{l:'Henry Hub',v:'$2.84',c:'-0.05',u:0}];
+function renderTicker(){document.getElementById('ticker').innerHTML=tickers.map(function(t){return '<div class="tick"><span class="tick-label">'+t.l+'</span><span class="tick-val">'+t.v+'</span>'+(t.c?'<span class="tick-chg '+(t.u?'tick-up':'tick-dn')+'">'+(t.u?'\u25B2':'\u25BC')+' '+t.c+'</span>':'')+'</div>'}).join('')}
+renderTicker();
+function updateTickerFromData(data){
+  if(!data||data.length<2)return;
+  var last=null,prev=null;
+  for(var i=data.length-1;i>=0;i--){if(data[i].brent!=null&&data[i].wti!=null){if(!last)last=data[i];else if(!prev){prev=data[i];break}}}
+  if(!last||!prev)return;
+  tickers.forEach(function(t){
+    var cur,old;
+    if(t.id==='brent'){cur=last.brent;old=prev.brent}
+    else if(t.id==='wti'){cur=last.wti;old=prev.wti}
+    else return;
+    var chg=cur-old;
+    t.v='$'+cur.toFixed(2);
+    t.c=(chg>=0?'+':'')+chg.toFixed(2);
+    t.u=chg>=0?1:0;
+  });
+  renderTicker();
+}
 
 /* STATS */
 document.getElementById('stats').innerHTML=[['Global Production','102.2M','Barrels/day (2024)'],['Traded Volume','48M','bbl/d (~47%)'],['Top Exporter','Saudi','7.3M bbl/d'],['Top Importer','China','11.4M bbl/d'],['Brent Benchmark','$78','per barrel']].map(function(s){return '<div class="stat-card"><div class="stat-label">'+s[0]+'</div><div class="stat-val">'+s[1]+'</div><div class="stat-sub">'+s[2]+'</div></div>'}).join('');
@@ -534,6 +552,7 @@ Promise.all([fetchEIASeries('RBRTE'),fetchEIASeries('RWTC')]).then(function(resu
   historyData=Object.values(byDate).sort(function(a,b){return a.date.localeCompare(b.date)});
   document.getElementById('history-loading').style.display='none';
   document.getElementById('history-chart-wrap').style.display='block';
+  updateTickerFromData(historyData);
   renderHistoryChart();
 }).catch(function(err){
   document.getElementById('history-loading').innerHTML='<span style="color:var(--red)">Failed to load prices: '+err.message+'</span>';
