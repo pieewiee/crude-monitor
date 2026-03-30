@@ -1,6 +1,6 @@
 #!/bin/sh
-# Write runtime config from env vars
-cat > /usr/share/nginx/html/config.json <<JSON
-{"eiaApiKey":"${EIA_API_KEY:-}"}
-JSON
+# Write nginx snippet with API key for proxy injection
+cat > /etc/nginx/eia_key.conf <<CONF
+set \$eia_api_key "${EIA_API_KEY:-}";
+CONF
 exec nginx -g 'daemon off;'

@@ -424,7 +424,6 @@ switchTrade(0);
 new Chart(document.getElementById('molChart'),{type:'bar',data:{labels:['Paraffins (Alkanes)','Naphthenes (Cycloalkanes)','Aromatics','Resins & Asphaltenes'],datasets:[{label:'Light Oil (WTI)',data:[75,15,8,2],backgroundColor:BLU,borderWidth:0,borderRadius:1,barPercentage:.7,categoryPercentage:.6},{label:'Heavy Oil (Maya)',data:[35,25,20,20],backgroundColor:RED,borderWidth:0,borderRadius:1,barPercentage:.7,categoryPercentage:.6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:INK3,font:{family:'JetBrains Mono',size:10},boxWidth:8,padding:16}},tooltip:{backgroundColor:BG4,borderColor:'#363632',borderWidth:1,titleColor:INK,bodyColor:INK2,titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.raw+'%'}}}},scales:{y:{max:80,grid:{color:'#1e1e1c'},ticks:{color:INK3,font:{family:'JetBrains Mono',size:10},callback:function(v){return v+'%'}},border:{color:RULE}},x:{grid:{display:false},ticks:{color:INK2,font:{family:'Instrument Sans',size:11}},border:{color:RULE}}}}});
 
 /* HISTORICAL PRICE CHART */
-var EIA_KEY='';
 var EIA_BASE='/api/eia/v2/petroleum/pri/spt/data/';
 var historyData=null,historyChart=null,historyRange='Max';
 var incidents=[
@@ -503,7 +502,14 @@ function renderHistoryChart(){
 function fetchEIASeries(seriesId){
   var all=[],pageSize=5000;
   function fetchPage(offset){
-    var params=new URLSearchParams({api_key:EIA_KEY,'data[0]':'value',frequency:'daily','facets[series][]':seriesId,sort:JSON.stringify([{column:'period',direction:'asc'}]),length:pageSize,offset:offset});
+    var params=new URLSearchParams();
+    params.append('data[0]','value');
+    params.append('frequency','daily');
+    params.append('facets[series][]',seriesId);
+    params.append('sort[0][column]','period');
+    params.append('sort[0][direction]','asc');
+    params.append('length',pageSize);
+    params.append('offset',offset);
     return fetch(EIA_BASE+'?'+params).then(function(r){
       if(!r.ok)throw new Error('EIA API '+r.status);
       return r.json();
@@ -517,31 +523,21 @@ function fetchEIASeries(seriesId){
   return fetchPage(0);
 }
 
-function loadHistoryData(){
-  if(!EIA_KEY||EIA_KEY.indexOf('__')===0){
-    document.getElementById('history-loading').innerHTML='<span style="color:var(--accent)">Set EIA_KEY in source to load live prices</span>';
-    return;
-  }
-  Promise.all([fetchEIASeries('RBRTE'),fetchEIASeries('RWTC')]).then(function(results){
-    var brentRows=results[0],wtiRows=results[1];
-    var byDate={};
-    brentRows.forEach(function(r){byDate[r.period]={date:r.period,brent:r.value}});
-    wtiRows.forEach(function(r){
-      if(!byDate[r.period])byDate[r.period]={date:r.period};
-      byDate[r.period].wti=r.value;
-    });
-    historyData=Object.values(byDate).sort(function(a,b){return a.date.localeCompare(b.date)});
-    document.getElementById('history-loading').style.display='none';
-    document.getElementById('history-chart-wrap').style.display='block';
-    renderHistoryChart();
-  }).catch(function(err){
-    document.getElementById('history-loading').innerHTML='<span style="color:var(--red)">Failed to load prices: '+err.message+'</span>';
+Promise.all([fetchEIASeries('RBRTE'),fetchEIASeries('RWTC')]).then(function(results){
+  var brentRows=results[0],wtiRows=results[1];
+  var byDate={};
+  brentRows.forEach(function(r){byDate[r.period]={date:r.period,brent:r.value}});
+  wtiRows.forEach(function(r){
+    if(!byDate[r.period])byDate[r.period]={date:r.period};
+    byDate[r.period].wti=r.value;
   });
-}
-fetch('/config.json').then(function(r){return r.json()}).then(function(cfg){
-  EIA_KEY=cfg.eiaApiKey||'';
-  loadHistoryData();
-}).catch(function(){loadHistoryData()});
+  historyData=Object.values(byDate).sort(function(a,b){return a.date.localeCompare(b.date)});
+  document.getElementById('history-loading').style.display='none';
+  document.getElementById('history-chart-wrap').style.display='block';
+  renderHistoryChart();
+}).catch(function(err){
+  document.getElementById('history-loading').innerHTML='<span style="color:var(--red)">Failed to load prices: '+err.message+'</span>';
+});
 </script>
 </body>
 </html>
