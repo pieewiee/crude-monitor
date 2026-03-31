@@ -210,6 +210,8 @@ html{overflow-x:hidden}
 /* INTERACTIVE TOOLS */
 .tool-input{font-family:var(--mono);font-size:.75rem;background:var(--bg3);border:1px solid var(--rule2);color:var(--ink);padding:.4rem .6rem;border-radius:var(--radius);width:100%;outline:none}
 .tool-input:focus{border-color:var(--accent)}
+select.tool-input{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6' fill='%237a776f'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .6rem center;padding-right:1.6rem;cursor:pointer}
+select.tool-input option{background:var(--bg3);color:var(--ink)}
 .tool-label{font-family:var(--mono);font-size:.6rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
 .tool-result{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--accent);margin-top:.5rem}
 .tool-sub{font-size:.7rem;color:var(--ink3);margin-top:.2rem}
@@ -514,6 +516,19 @@ html{overflow-x:hidden}
 <div class="grid-2 reveal">
   <div class="gcell">
     <div class="section-header"><span>Fuel Cost Calculator</span><span style="color:var(--accent)">Interactive</span></div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem">
+      <div style="flex:1;min-width:120px">
+        <div class="tool-label">Country</div>
+        <select class="tool-input" id="fuel-country"></select>
+      </div>
+      <div style="min-width:100px">
+        <div class="tool-label">Fuel type</div>
+        <div style="display:flex;gap:.3rem;margin-top:.3rem" id="fuel-type-btns">
+          <button class="tool-btn active" data-t="gasoline">Gasoline</button>
+          <button class="tool-btn" data-t="diesel">Diesel</button>
+        </div>
+      </div>
+    </div>
     <div class="tool-label">Tank size</div>
     <div style="display:flex;align-items:center;gap:.8rem">
       <input type="range" class="tool-slider" id="tank-slider" min="10" max="120" value="50" step="5">
@@ -1371,31 +1386,83 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
 
 /* ===================== INTERACTIVE TOOLS ===================== */
 
-/* 15. FUEL COST CALCULATOR */
+/* 15. FUEL COST CALCULATOR — country-specific prices */
 (function(){
+  /* Avg pump prices per liter (2025 estimates): gasoline / diesel, currency symbol */
+  var countries=[
+    {name:'Germany',cur:'\u20AC',gas:1.75,die:1.62,flag:'DE'},
+    {name:'Austria',cur:'\u20AC',gas:1.58,die:1.55,flag:'AT'},
+    {name:'Switzerland',cur:'CHF',gas:1.82,die:1.90,flag:'CH'},
+    {name:'France',cur:'\u20AC',gas:1.85,die:1.72,flag:'FR'},
+    {name:'Italy',cur:'\u20AC',gas:1.80,die:1.70,flag:'IT'},
+    {name:'Spain',cur:'\u20AC',gas:1.55,die:1.45,flag:'ES'},
+    {name:'Netherlands',cur:'\u20AC',gas:2.10,die:1.75,flag:'NL'},
+    {name:'UK',cur:'\u00A3',gas:1.42,die:1.48,flag:'GB'},
+    {name:'Norway',cur:'NOK',gas:19.5,die:18.8,flag:'NO'},
+    {name:'Sweden',cur:'SEK',gas:17.8,die:17.2,flag:'SE'},
+    {name:'Poland',cur:'PLN',gas:6.30,die:6.10,flag:'PL'},
+    {name:'USA',cur:'$',gas:0.92,die:0.99,flag:'US'},
+    {name:'Canada',cur:'C$',gas:1.65,die:1.72,flag:'CA'},
+    {name:'Australia',cur:'A$',gas:1.95,die:1.85,flag:'AU'},
+    {name:'Japan',cur:'\u00A5',gas:175,die:155,flag:'JP'},
+    {name:'India',cur:'\u20B9',gas:95,die:87,flag:'IN'},
+    {name:'Brazil',cur:'R$',gas:5.80,die:5.50,flag:'BR'},
+    {name:'Saudi Arabia',cur:'SAR',gas:2.33,die:1.44,flag:'SA'},
+    {name:'UAE',cur:'AED',gas:3.05,die:3.18,flag:'AE'}
+  ];
   var slider=document.getElementById('tank-slider');
   var valEl=document.getElementById('tank-val');
   var resultEl=document.getElementById('fuel-result');
-  /* Rough model: crude → refining → tax → pump price */
-  var TAX_PER_L=0.65; /* avg EU tax ~€0.65/L */
-  var REFINE_PER_L=0.12;
-  var MARKUP_PER_L=0.08;
-  var LITERS_PER_BBL=159;
+  var select=document.getElementById('fuel-country');
+  var fuelType='gasoline';
+
+  /* Populate country dropdown */
+  countries.forEach(function(c,i){
+    var opt=document.createElement('option');
+    opt.value=i;
+    opt.textContent=c.flag+' '+c.name;
+    select.appendChild(opt);
+  });
+
+  /* Fuel type toggle */
+  var typeBtns=document.getElementById('fuel-type-btns');
+  typeBtns.querySelectorAll('.tool-btn').forEach(function(btn){
+    btn.onclick=function(){
+      typeBtns.querySelectorAll('.tool-btn').forEach(function(b){b.classList.remove('active')});
+      btn.classList.add('active');
+      fuelType=btn.dataset.t;
+      update();
+    };
+  });
+
   function update(){
     var liters=parseInt(slider.value);
     valEl.textContent=liters+' L';
+    var c=countries[select.value];
+    var pricePerL=fuelType==='gasoline'?c.gas:c.die;
+    var total=pricePerL*liters;
+    /* Breakdown estimate: crude ~35-55%, tax ~25-45%, refining+margin ~15-20% */
     var latestBrent=(historyData&&historyData.length)?historyData[historyData.length-1].brent:null;
-    if(!latestBrent){resultEl.innerHTML='<div class="tool-sub">Waiting for price data\u2026</div>';return}
-    var crudePerL=latestBrent/LITERS_PER_BBL;
-    var pumpPrice=crudePerL+REFINE_PER_L+TAX_PER_L+MARKUP_PER_L;
-    var total=pumpPrice*liters;
-    resultEl.innerHTML='<div class="tool-result">\u2248 \u20AC'+total.toFixed(2)+'</div>'
-      +'<div class="tool-sub">@ \u20AC'+pumpPrice.toFixed(2)+'/L pump price estimate</div>'
-      +'<div style="font-size:.6rem;color:var(--ink4);margin-top:.4rem">'
-      +'Crude: \u20AC'+crudePerL.toFixed(2)+' + Refining: \u20AC'+REFINE_PER_L.toFixed(2)+' + Tax: \u20AC'+TAX_PER_L.toFixed(2)+' + Margin: \u20AC'+MARKUP_PER_L.toFixed(2)+' per liter'
+    var crudeShare=latestBrent?(latestBrent/158.987)/pricePerL*100:40;
+    crudeShare=Math.min(crudeShare,65);
+    var taxShare=Math.max(100-crudeShare-18,15);
+    var refineShare=100-crudeShare-taxShare;
+
+    resultEl.innerHTML='<div class="tool-result">'+c.cur+' '+total.toFixed(2)+'</div>'
+      +'<div class="tool-sub">'+liters+' L '+fuelType+' @ '+c.cur+' '+pricePerL.toFixed(2)+'/L in '+c.name+'</div>'
+      +'<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:.6rem">'
+      +'<div style="width:'+crudeShare+'%;background:var(--accent)" title="Crude"></div>'
+      +'<div style="width:'+taxShare+'%;background:var(--red)" title="Tax"></div>'
+      +'<div style="width:'+refineShare+'%;background:var(--blue)" title="Refining"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:.8rem;font-family:var(--mono);font-size:.55rem;color:var(--ink3);margin-top:.3rem">'
+      +'<span>\u25A0 <span style="color:var(--accent)">Crude '+crudeShare.toFixed(0)+'%</span></span>'
+      +'<span>\u25A0 <span style="color:var(--red)">Tax '+taxShare.toFixed(0)+'%</span></span>'
+      +'<span>\u25A0 <span style="color:var(--blue)">Refining & margin '+refineShare.toFixed(0)+'%</span></span>'
       +'</div>';
   }
   slider.addEventListener('input',update);
+  select.addEventListener('change',update);
   /* Re-run when data arrives */
   var origPR=processAndRender;
   processAndRender=function(a,b){origPR(a,b);update()};
