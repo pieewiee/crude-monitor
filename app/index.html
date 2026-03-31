@@ -469,7 +469,7 @@ html{overflow-x:hidden}
     <div class="depth-gauge" id="depth-gauge"></div>
   </div>
   <div class="gcell">
-    <div class="section-header"><span>Top Oil Producers</span><span style="color:var(--ink3)">M bbl/day 2025</span></div>
+    <div class="section-header"><span>Top Oil Producers</span><span style="color:var(--ink3)">M bbl/d &middot; 2025</span></div>
     <div id="top-producers"></div>
   </div>
 </div>
@@ -1228,8 +1228,14 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
     {flag:'CN',name:'China',val:4.2},
     {flag:'BR',name:'Brazil',val:3.7},
     {flag:'AE',name:'UAE',val:3.4},
+    {flag:'IR',name:'Iran',val:3.2},
     {flag:'KW',name:'Kuwait',val:2.7},
-    {flag:'NO',name:'Norway',val:2.0}
+    {flag:'MX',name:'Mexico',val:2.1},
+    {flag:'NO',name:'Norway',val:2.0},
+    {flag:'NG',name:'Nigeria',val:1.5},
+    {flag:'KZ',name:'Kazakhstan',val:1.5},
+    {flag:'LY',name:'Libya',val:1.2},
+    {flag:'DZ',name:'Algeria',val:1.0}
   ];
   var maxVal=top10[0].val;
   var html='';
