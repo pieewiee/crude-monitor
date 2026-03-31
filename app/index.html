@@ -161,6 +161,74 @@ html{overflow-x:hidden}
 .heatmap td{padding:3px 6px;text-align:center;min-width:38px;border:1px solid var(--bg)}
 .heatmap td:first-child{font-weight:600;color:var(--ink2);text-align:left;background:var(--bg);position:sticky;left:0;border:none}
 
+/* FILM GRAIN OVERLAY */
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat;background-size:256px 256px;animation:grain 0.5s steps(1) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-5%,-5%)}50%{transform:translate(5%,2%)}75%{transform:translate(-2%,5%)}100%{transform:translate(0,0)}}
+
+/* ANIMATED PIPELINE */
+.pipeline-wrap{position:relative;height:60px;margin:1rem 0;overflow:hidden}
+.pipeline-pipe{position:absolute;top:22px;left:0;right:0;height:16px;background:var(--bg4);border-radius:8px;border:1px solid var(--rule2)}
+.pipeline-pipe::after{content:'';position:absolute;top:2px;left:0;right:0;height:4px;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent);border-radius:4px}
+.pipeline-dot{position:absolute;top:26px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:flowDot 3s linear infinite}
+@keyframes flowDot{from{left:-8px}to{left:100%}}
+.pipeline-label{position:absolute;font-family:var(--mono);font-size:.55rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
+.pipeline-label.left{left:0;top:0}
+.pipeline-label.right{right:0;top:0}
+.pipeline-valve{position:absolute;top:16px;width:28px;height:28px;background:var(--bg3);border:2px solid var(--rule2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem}
+
+/* DEPTH GAUGE */
+.depth-gauge{position:relative;display:flex;gap:0;height:420px;margin:.5rem 0}
+.depth-shaft{width:48px;background:linear-gradient(180deg,var(--bg3) 0%,#1a1208 60%,#0e0a04 100%);border:1px solid var(--rule2);border-radius:3px;position:relative;flex-shrink:0}
+.depth-marker{position:absolute;left:56px;display:flex;align-items:center;gap:.5rem;white-space:nowrap}
+.depth-line{width:20px;height:1px;background:var(--rule2)}
+.depth-label{font-family:var(--mono);font-size:.6rem;color:var(--ink2)}
+.depth-sub{font-size:.55rem;color:var(--ink3)}
+.depth-icon{font-size:.9rem;position:absolute;left:12px;transform:translateX(-50%)}
+
+/* SCALE COMPARISONS */
+.scale-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem}
+.scale-item{text-align:center}
+.scale-val{font-family:var(--mono);font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:700;color:var(--accent);line-height:1}
+.scale-unit{font-family:var(--mono);font-size:.65rem;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;margin-top:.1rem}
+.scale-desc{font-size:.7rem;color:var(--ink3);margin-top:.3rem}
+
+/* OIL QUOTES */
+.oil-quote{text-align:center;padding:2rem 3rem;max-width:700px;margin:0 auto}
+.oil-quote blockquote{font-family:var(--serif);font-size:clamp(1.1rem,2.5vw,1.5rem);font-style:italic;color:var(--ink);line-height:1.5;margin:0}
+.oil-quote cite{display:block;font-family:var(--mono);font-size:.65rem;color:var(--ink3);margin-top:.8rem;font-style:normal;letter-spacing:.06em;text-transform:uppercase}
+.quote-fade{animation:quoteFade 12s ease-in-out infinite}
+@keyframes quoteFade{0%,100%{opacity:0;transform:translateY(6px)}8%,92%{opacity:1;transform:translateY(0)}}
+
+/* TANKER COMPARISON */
+.tanker-wrap{position:relative;overflow-x:auto;padding-bottom:1rem;scrollbar-width:none}
+.tanker-wrap::-webkit-scrollbar{display:none}
+.tanker-row{display:flex;align-items:flex-end;gap:1.5rem;padding:1rem 0;min-width:fit-content}
+.tanker-item{text-align:center;flex-shrink:0}
+.tanker-hull{background:var(--bg4);border:1px solid var(--rule2);border-radius:2px 2px 8px 8px;margin:0 auto .4rem;position:relative;overflow:hidden}
+.tanker-hull::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;background:var(--red);opacity:.15}
+.tanker-name{font-family:var(--mono);font-size:.6rem;font-weight:600;color:var(--ink)}
+.tanker-spec{font-family:var(--mono);font-size:.5rem;color:var(--ink3);margin-top:.1rem}
+
+/* TOP PRODUCERS */
+.prod-row{display:flex;align-items:center;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--rule)}
+.prod-row:last-child{border-bottom:none}
+.prod-rank{font-family:var(--mono);font-size:.6rem;color:var(--ink3);width:16px;text-align:right}
+.prod-flag{font-size:1rem}
+.prod-name{font-family:var(--mono);font-size:.7rem;font-weight:600;color:var(--ink);min-width:90px}
+.prod-bar{flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.prod-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.prod-val{font-family:var(--mono);font-size:.65rem;font-weight:600;color:var(--ink);min-width:50px;text-align:right}
+
+/* CURSOR TRAIL */
+.cursor-drop{position:fixed;pointer-events:none;z-index:9998;width:6px;height:8px;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;background:var(--accent);opacity:.6;transition:opacity .8s ease,transform .8s ease}
+
+/* ODOMETER */
+.odo-wrap{display:inline-flex;gap:2px;overflow:hidden;vertical-align:bottom}
+.odo-digit{display:inline-block;width:clamp(.65em,.9em,1em);height:1.2em;overflow:hidden;position:relative;background:var(--bg3);border:1px solid var(--rule2);border-radius:2px;text-align:center}
+.odo-digit.comma{background:none;border:none;width:.3em}
+.odo-strip{position:absolute;left:0;right:0;transition:transform .4s cubic-bezier(.4,.0,.2,1)}
+.odo-strip span{display:block;height:1.2em;line-height:1.2em;font-family:var(--mono);font-weight:700}
+
 /* PETRO GRID — Oil is Everywhere */
 .petro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1px;background:var(--rule)}
 .petro-item{background:var(--bg);padding:.9rem .8rem;text-align:center;transition:background .2s}
@@ -245,6 +313,11 @@ html{overflow-x:hidden}
   .barrel-powers{grid-template-columns:repeat(2,1fr);gap:.8rem}
   .cc-swatch{min-width:80px;padding:.7rem .4rem .6rem}
   .cc-dot{width:36px;height:36px}
+  .depth-gauge{height:340px}
+  .oil-quote{padding:1.5rem 1rem}
+  .scale-grid{grid-template-columns:repeat(2,1fr);gap:.8rem}
+  .tanker-row{gap:.8rem}
+  .cursor-drop{display:none}
 }
 @media(max-width:400px){
   .stat-card{min-width:100%}
@@ -392,6 +465,41 @@ html{overflow-x:hidden}
     <div class="section-header"><span>From Plankton to Pump</span><span style="color:var(--ink3)">How oil forms</span></div>
     <div id="oil-timeline"></div>
   </div>
+</div>
+
+<!-- OIL QUOTES -->
+<div class="section reveal" style="border-bottom:1px solid var(--rule)">
+  <div class="oil-quote" id="oil-quote"></div>
+</div>
+
+<!-- ANIMATED PIPELINE -->
+<div class="section reveal">
+  <div class="section-header"><span>Crude Transport Pipeline</span><span style="color:var(--ink3)">Animated flow</span></div>
+  <div class="pipeline-wrap" id="pipeline"></div>
+</div>
+
+<!-- DAILY OUTPUT SCALE -->
+<div class="section reveal" style="text-align:center;padding:2.5rem 2rem">
+  <div class="section-header" style="justify-content:center"><span>Daily World Output Equals&hellip;</span></div>
+  <div class="scale-grid" id="scale-grid"></div>
+</div>
+
+<!-- DEPTH GAUGE + TOP PRODUCERS -->
+<div class="grid-2 reveal">
+  <div class="gcell">
+    <div class="section-header"><span>How Deep We Drill</span><span style="color:var(--ink3)">Meters below surface</span></div>
+    <div class="depth-gauge" id="depth-gauge"></div>
+  </div>
+  <div class="gcell">
+    <div class="section-header"><span>Top Oil Producers</span><span style="color:var(--ink3)">M bbl/day 2025</span></div>
+    <div id="top-producers"></div>
+  </div>
+</div>
+
+<!-- TANKER SIZE COMPARISON -->
+<div class="section reveal">
+  <div class="section-header"><span>Tanker Size Comparison</span><span style="color:var(--ink3)">To scale</span></div>
+  <div class="tanker-wrap"><div class="tanker-row" id="tanker-row"></div></div>
 </div>
 
 <footer class="foot">
@@ -961,19 +1069,7 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
 
 /* ===================== FUN FACTS SECTIONS ===================== */
 
-/* 1. LIVE CONSUMPTION COUNTER — ~101M bbl/day = ~1169 bbl/sec */
-(function(){
-  var BPS=1169.0;
-  var counterEl=document.getElementById('oil-counter');
-  var start=Date.now();
-  function tick(){
-    var elapsed=(Date.now()-start)/1000;
-    var barrels=Math.floor(elapsed*BPS);
-    counterEl.textContent=barrels.toLocaleString('en-US');
-    requestAnimationFrame(tick);
-  }
-  tick();
-})();
+/* 1. LIVE CONSUMPTION COUNTER — replaced by odometer at bottom */
 
 /* 2. OIL IS EVERYWHERE */
 (function(){
@@ -1078,6 +1174,186 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
   });
   html+='</div>';
   document.getElementById('oil-timeline').innerHTML=html;
+})();
+
+/* 7. OIL QUOTES ROTATOR */
+(function(){
+  var quotes=[
+    {q:'Oil is the blood of the earth.',a:'Enrico Mattei'},
+    {q:'The Stone Age did not end for lack of stone, and the Oil Age will end long before the world runs out of oil.',a:'Sheikh Ahmed Zaki Yamani'},
+    {q:'I\u2019d put my money on the sun and solar energy. What a source of power!',a:'Thomas Edison, 1931'},
+    {q:'Whoever controls the oil routes rules the world.',a:'Zbigniew Brzezinski'},
+    {q:'Oil is much too important a commodity to be left in the hands of the Arabs.',a:'Henry Kissinger'},
+    {q:'The meek shall inherit the Earth, but not its mineral rights.',a:'J. Paul Getty'},
+    {q:'The use of solar energy has not been opened up because the oil industry does not own the sun.',a:'Ralph Nader'},
+    {q:'Every barrel of oil that comes out of the ground is a barrel we\u2019ll never see again.',a:'Matthew Simmons'}
+  ];
+  var el=document.getElementById('oil-quote');
+  var idx=0;
+  function showQuote(){
+    var q=quotes[idx%quotes.length];
+    el.innerHTML='<div class="quote-fade" style="animation-duration:12s"><blockquote>\u201C'+q.q+'\u201D</blockquote><cite>\u2014 '+q.a+'</cite></div>';
+    idx++;
+  }
+  showQuote();
+  setInterval(showQuote,12000);
+})();
+
+/* 8. ANIMATED PIPELINE */
+(function(){
+  var wrap=document.getElementById('pipeline');
+  var html='<div class="pipeline-label left">\u26AB Wellhead</div><div class="pipeline-label right">Refinery \u26AB</div>';
+  html+='<div class="pipeline-pipe"></div>';
+  html+='<div class="pipeline-valve" style="left:25%">\u2699</div>';
+  html+='<div class="pipeline-valve" style="left:50%">\u2699</div>';
+  html+='<div class="pipeline-valve" style="left:75%">\u2699</div>';
+  for(var i=0;i<6;i++){
+    html+='<div class="pipeline-dot" style="animation-delay:'+(i*-.5)+'s"></div>';
+  }
+  wrap.innerHTML=html;
+})();
+
+/* 9. DAILY OUTPUT SCALE COMPARISONS */
+(function(){
+  var items=[
+    {val:'4,032',unit:'Olympic pools',desc:'101M bbl/day = 16B liters'},
+    {val:'52',unit:'supertankers',desc:'VLCC capacity: 2M barrels'},
+    {val:'1.2',unit:'billion bathtubs',desc:'Standard 150-liter tub'},
+    {val:'6,465',unit:'train cars',desc:'Each holds 700 barrels'},
+    {val:'63',unit:'km\u00b3/year',desc:'A cube 4km on each side'},
+    {val:'16',unit:'billion liters',desc:'Enough to fill Lake Zurich in 6 days'}
+  ];
+  var html='';
+  items.forEach(function(f){
+    html+='<div class="scale-item"><div class="scale-val">'+f.val+'</div><div class="scale-unit">'+f.unit+'</div><div class="scale-desc">'+f.desc+'</div></div>';
+  });
+  document.getElementById('scale-grid').innerHTML=html;
+})();
+
+/* 10. DEPTH GAUGE */
+(function(){
+  var maxDepth=12500;
+  var markers=[
+    {depth:0,label:'Surface',icon:'\uD83C\uDFD7\uFE0F',sub:''},
+    {depth:324,label:'Eiffel Tower',icon:'\uD83C\uDDEB\uD83C\uDDF7',sub:'324 m'},
+    {depth:828,label:'Burj Khalifa',icon:'\uD83C\uDDE6\uD83C\uDDEA',sub:'828 m'},
+    {depth:1500,label:'Average oil well',icon:'\u26AB',sub:'1,500 m'},
+    {depth:2500,label:'Deepwater Horizon',icon:'\uD83D\uDEE2\uFE0F',sub:'2,500 m'},
+    {depth:3800,label:'North Sea wells',icon:'\uD83C\uDDEC\uD83C\uDDE7',sub:'3,800 m'},
+    {depth:8849,label:'Mt. Everest (inverted)',icon:'\u26F0\uFE0F',sub:'8,849 m'},
+    {depth:9583,label:'Deepest oil well (Sakhalin)',icon:'\uD83C\uDDF7\uD83C\uDDFA',sub:'9,583 m'},
+    {depth:10994,label:'Mariana Trench',icon:'\uD83C\uDF0A',sub:'10,994 m'},
+    {depth:12262,label:'Kola Superdeep (deepest hole)',icon:'\u26CF\uFE0F',sub:'12,262 m'}
+  ];
+  var gaugeEl=document.getElementById('depth-gauge');
+  var shaftHtml='<div class="depth-shaft">';
+  markers.forEach(function(m){
+    var pct=(m.depth/maxDepth*100).toFixed(1);
+    shaftHtml+='<div class="depth-icon" style="top:'+pct+'%">'+m.icon+'</div>';
+  });
+  shaftHtml+='</div>';
+  var markerHtml='';
+  markers.forEach(function(m){
+    var pct=(m.depth/maxDepth*100).toFixed(1);
+    markerHtml+='<div class="depth-marker" style="top:'+pct+'%"><div class="depth-line"></div><div><div class="depth-label">'+m.label+'</div><div class="depth-sub">'+m.sub+'</div></div></div>';
+  });
+  gaugeEl.innerHTML=shaftHtml+'<div style="position:relative;flex:1">'+markerHtml+'</div>';
+})();
+
+/* 11. TOP OIL PRODUCERS */
+(function(){
+  var top10=[
+    {flag:'\uD83C\uDDFA\uD83C\uDDF8',name:'United States',val:13.2},
+    {flag:'\uD83C\uDDF8\uD83C\uDDE6',name:'Saudi Arabia',val:11.1},
+    {flag:'\uD83C\uDDF7\uD83C\uDDFA',name:'Russia',val:10.8},
+    {flag:'\uD83C\uDDE8\uD83C\uDDE6',name:'Canada',val:5.8},
+    {flag:'\uD83C\uDDEE\uD83C\uDDF6',name:'Iraq',val:4.4},
+    {flag:'\uD83C\uDDE8\uD83C\uDDF3',name:'China',val:4.2},
+    {flag:'\uD83C\uDDE7\uD83C\uDDF7',name:'Brazil',val:3.7},
+    {flag:'\uD83C\uDDFA\uD83C\uDDE6\uD83C\uDDEA',name:'UAE',val:3.4},
+    {flag:'\uD83C\uDDF0\uD83C\uDDFC',name:'Kuwait',val:2.7},
+    {flag:'\uD83C\uDDF3\uD83C\uDDF4',name:'Norway',val:2.0}
+  ];
+  var maxVal=top10[0].val;
+  var html='';
+  top10.forEach(function(p,i){
+    html+='<div class="prod-row"><span class="prod-rank">'+(i+1)+'</span><span class="prod-flag">'+p.flag+'</span><span class="prod-name">'+p.name+'</span><div class="prod-bar"><div class="prod-bar-fill" style="width:'+(p.val/maxVal*100).toFixed(0)+'%;background:'+((i===0)?'var(--accent)':(i<3)?'var(--accent2)':'var(--ink4)')+'"></div></div><span class="prod-val">'+p.val.toFixed(1)+'</span></div>';
+  });
+  document.getElementById('top-producers').innerHTML=html;
+})();
+
+/* 12. TANKER SIZE COMPARISON */
+(function(){
+  var tankers=[
+    {name:'Barge',dwt:'5K DWT',len:'60m',w:30,h:10},
+    {name:'Handysize',dwt:'35K DWT',len:'180m',w:55,h:14},
+    {name:'Panamax',dwt:'80K DWT',len:'230m',w:70,h:18},
+    {name:'Aframax',dwt:'120K DWT',len:'250m',w:85,h:22},
+    {name:'Suezmax',dwt:'160K DWT',len:'285m',w:100,h:26},
+    {name:'VLCC',dwt:'300K DWT',len:'330m',w:130,h:34},
+    {name:'ULCC',dwt:'550K DWT',len:'415m',w:160,h:42}
+  ];
+  var html='';
+  tankers.forEach(function(t){
+    html+='<div class="tanker-item"><div class="tanker-hull" style="width:'+t.w+'px;height:'+t.h+'px"></div><div class="tanker-name">'+t.name+'</div><div class="tanker-spec">'+t.dwt+' \u00b7 '+t.len+'</div></div>';
+  });
+  document.getElementById('tanker-row').innerHTML=html;
+})();
+
+/* 13. ODOMETER for consumption counter */
+(function(){
+  var counterEl=document.getElementById('oil-counter');
+  var BPS=1169.0;
+  var start=Date.now();
+  function buildOdo(numStr){
+    var html='';
+    for(var i=0;i<numStr.length;i++){
+      var ch=numStr[i];
+      if(ch===','){html+='<div class="odo-digit comma">,</div>';continue}
+      var d=parseInt(ch);
+      html+='<div class="odo-digit"><div class="odo-strip" style="transform:translateY(-'+d*1.2+'em)">';
+      for(var n=0;n<=9;n++){html+='<span>'+n+'</span>'}
+      html+='</div></div>';
+    }
+    return html;
+  }
+  function tick(){
+    var elapsed=(Date.now()-start)/1000;
+    var barrels=Math.floor(elapsed*BPS);
+    var formatted=barrels.toLocaleString('en-US');
+    counterEl.innerHTML='<div class="odo-wrap">'+buildOdo(formatted)+'</div>';
+    requestAnimationFrame(tick);
+  }
+  /* Override the simple counter from earlier */
+  tick();
+})();
+
+/* 14. CURSOR OIL DROP TRAIL */
+(function(){
+  if('ontouchstart' in window)return;
+  var drops=[];
+  var maxDrops=12;
+  document.addEventListener('mousemove',function(e){
+    if(Math.random()>0.3)return;
+    var drop=document.createElement('div');
+    drop.className='cursor-drop';
+    drop.style.left=e.clientX+'px';
+    drop.style.top=e.clientY+'px';
+    document.body.appendChild(drop);
+    drops.push(drop);
+    requestAnimationFrame(function(){
+      drop.style.opacity='0';
+      drop.style.transform='translateY(20px) scale(0.3)';
+    });
+    setTimeout(function(){
+      drop.remove();
+      drops.shift();
+    },800);
+    if(drops.length>maxDrops){
+      var old=drops.shift();
+      old.remove();
+    }
+  });
 })();
 </script>
 </body>
