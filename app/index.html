@@ -163,13 +163,14 @@ html{overflow-x:hidden}
 
 
 /* DEPTH GAUGE */
-.depth-gauge{position:relative;display:flex;gap:0;height:420px;margin:.5rem 0}
-.depth-shaft{width:48px;background:linear-gradient(180deg,var(--bg3) 0%,#1a1208 60%,#0e0a04 100%);border:1px solid var(--rule2);border-radius:3px;position:relative;flex-shrink:0}
-.depth-marker{position:absolute;left:56px;display:flex;align-items:center;gap:.5rem;white-space:nowrap}
-.depth-line{width:20px;height:1px;background:var(--rule2)}
-.depth-label{font-family:var(--mono);font-size:.6rem;color:var(--ink2)}
-.depth-sub{font-size:.55rem;color:var(--ink3)}
-.depth-icon{font-size:.9rem;position:absolute;left:12px;transform:translateX(-50%)}
+.depth-gauge{margin:.5rem 0}
+.depth-row{display:flex;align-items:center;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--rule)}
+.depth-row:last-child{border-bottom:none}
+.depth-icon{font-size:1rem;width:24px;text-align:center;flex-shrink:0}
+.depth-bar-wrap{flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.depth-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent2),#1a1208);transition:width 1s ease}
+.depth-label{font-family:var(--mono);font-size:.65rem;color:var(--ink);min-width:140px;font-weight:500}
+.depth-val{font-family:var(--mono);font-size:.6rem;color:var(--ink3);min-width:60px;text-align:right}
 
 /* SCALE COMPARISONS */
 .scale-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem}
@@ -199,7 +200,7 @@ html{overflow-x:hidden}
 .prod-row{display:flex;align-items:center;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--rule)}
 .prod-row:last-child{border-bottom:none}
 .prod-rank{font-family:var(--mono);font-size:.6rem;color:var(--ink3);width:16px;text-align:right}
-.prod-flag{font-size:1rem}
+.prod-flag{font-family:var(--mono);font-size:.5rem;font-weight:700;color:var(--ink3);background:var(--bg4);border:1px solid var(--rule2);border-radius:2px;padding:1px 4px;min-width:24px;text-align:center;letter-spacing:.04em}
 .prod-name{font-family:var(--mono);font-size:.7rem;font-weight:600;color:var(--ink);min-width:90px}
 .prod-bar{flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
 .prod-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
@@ -297,7 +298,6 @@ html{overflow-x:hidden}
   .barrel-powers{grid-template-columns:repeat(2,1fr);gap:.8rem}
   .cc-swatch{min-width:80px;padding:.7rem .4rem .6rem}
   .cc-dot{width:36px;height:36px}
-  .depth-gauge{height:340px}
   .oil-quote{padding:1.5rem 1rem}
   .scale-grid{grid-template-columns:repeat(2,1fr);gap:.8rem}
   .tanker-row{gap:.8rem}
@@ -476,7 +476,7 @@ html{overflow-x:hidden}
 
 <!-- TANKER SIZE COMPARISON -->
 <div class="section reveal">
-  <div class="section-header"><span>Tanker Size Comparison</span><span style="color:var(--ink3)">To scale</span></div>
+  <div class="section-header"><span>Tanker Size Comparison</span><span style="color:var(--ink3)">Deadweight tonnage &middot; proportional</span></div>
   <div class="tanker-wrap"><div class="tanker-row" id="tanker-row"></div></div>
 </div>
 
@@ -1197,47 +1197,39 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
 
 /* 10. DEPTH GAUGE */
 (function(){
-  var maxDepth=12500;
+  var maxDepth=12262;
   var markers=[
-    {depth:0,label:'Surface',icon:'\uD83C\uDFD7\uFE0F',sub:''},
-    {depth:324,label:'Eiffel Tower',icon:'\uD83C\uDDEB\uD83C\uDDF7',sub:'324 m'},
-    {depth:828,label:'Burj Khalifa',icon:'\uD83C\uDDE6\uD83C\uDDEA',sub:'828 m'},
-    {depth:1500,label:'Average oil well',icon:'\u26AB',sub:'1,500 m'},
-    {depth:2500,label:'Deepwater Horizon',icon:'\uD83D\uDEE2\uFE0F',sub:'2,500 m'},
-    {depth:3800,label:'North Sea wells',icon:'\uD83C\uDDEC\uD83C\uDDE7',sub:'3,800 m'},
-    {depth:8849,label:'Mt. Everest (inverted)',icon:'\u26F0\uFE0F',sub:'8,849 m'},
-    {depth:9583,label:'Deepest oil well (Sakhalin)',icon:'\uD83C\uDDF7\uD83C\uDDFA',sub:'9,583 m'},
-    {depth:10994,label:'Mariana Trench',icon:'\uD83C\uDF0A',sub:'10,994 m'},
-    {depth:12262,label:'Kola Superdeep (deepest hole)',icon:'\u26CF\uFE0F',sub:'12,262 m'}
+    {depth:324,label:'Eiffel Tower',icon:'\uD83D\uDDFC'},
+    {depth:828,label:'Burj Khalifa',icon:'\uD83C\uDFD9\uFE0F'},
+    {depth:1500,label:'Average oil well',icon:'\uD83D\uDEE2\uFE0F'},
+    {depth:2500,label:'Deepwater Horizon',icon:'\uD83C\uDF0A'},
+    {depth:3800,label:'North Sea wells',icon:'\u2693'},
+    {depth:8849,label:'Mt. Everest (inverted)',icon:'\u26F0\uFE0F'},
+    {depth:9583,label:'Deepest oil well (Sakhalin)',icon:'\uD83E\uDEE8'},
+    {depth:10994,label:'Mariana Trench',icon:'\uD83D\uDC1F'},
+    {depth:12262,label:'Kola Superdeep Borehole',icon:'\u26CF\uFE0F'}
   ];
-  var gaugeEl=document.getElementById('depth-gauge');
-  var shaftHtml='<div class="depth-shaft">';
+  var html='';
   markers.forEach(function(m){
-    var pct=(m.depth/maxDepth*100).toFixed(1);
-    shaftHtml+='<div class="depth-icon" style="top:'+pct+'%">'+m.icon+'</div>';
+    var pct=(m.depth/maxDepth*100).toFixed(0);
+    html+='<div class="depth-row"><span class="depth-icon">'+m.icon+'</span><span class="depth-label">'+m.label+'</span><div class="depth-bar-wrap"><div class="depth-bar-fill" style="width:'+pct+'%"></div></div><span class="depth-val">'+m.depth.toLocaleString('en-US')+' m</span></div>';
   });
-  shaftHtml+='</div>';
-  var markerHtml='';
-  markers.forEach(function(m){
-    var pct=(m.depth/maxDepth*100).toFixed(1);
-    markerHtml+='<div class="depth-marker" style="top:'+pct+'%"><div class="depth-line"></div><div><div class="depth-label">'+m.label+'</div><div class="depth-sub">'+m.sub+'</div></div></div>';
-  });
-  gaugeEl.innerHTML=shaftHtml+'<div style="position:relative;flex:1">'+markerHtml+'</div>';
+  document.getElementById('depth-gauge').innerHTML=html;
 })();
 
 /* 11. TOP OIL PRODUCERS */
 (function(){
   var top10=[
-    {flag:'\uD83C\uDDFA\uD83C\uDDF8',name:'United States',val:13.2},
-    {flag:'\uD83C\uDDF8\uD83C\uDDE6',name:'Saudi Arabia',val:11.1},
-    {flag:'\uD83C\uDDF7\uD83C\uDDFA',name:'Russia',val:10.8},
-    {flag:'\uD83C\uDDE8\uD83C\uDDE6',name:'Canada',val:5.8},
-    {flag:'\uD83C\uDDEE\uD83C\uDDF6',name:'Iraq',val:4.4},
-    {flag:'\uD83C\uDDE8\uD83C\uDDF3',name:'China',val:4.2},
-    {flag:'\uD83C\uDDE7\uD83C\uDDF7',name:'Brazil',val:3.7},
-    {flag:'\uD83C\uDDFA\uD83C\uDDE6\uD83C\uDDEA',name:'UAE',val:3.4},
-    {flag:'\uD83C\uDDF0\uD83C\uDDFC',name:'Kuwait',val:2.7},
-    {flag:'\uD83C\uDDF3\uD83C\uDDF4',name:'Norway',val:2.0}
+    {flag:'US',name:'United States',val:13.2},
+    {flag:'SA',name:'Saudi Arabia',val:11.1},
+    {flag:'RU',name:'Russia',val:10.8},
+    {flag:'CA',name:'Canada',val:5.8},
+    {flag:'IQ',name:'Iraq',val:4.4},
+    {flag:'CN',name:'China',val:4.2},
+    {flag:'BR',name:'Brazil',val:3.7},
+    {flag:'AE',name:'UAE',val:3.4},
+    {flag:'KW',name:'Kuwait',val:2.7},
+    {flag:'NO',name:'Norway',val:2.0}
   ];
   var maxVal=top10[0].val;
   var html='';
@@ -1250,13 +1242,13 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
 /* 12. TANKER SIZE COMPARISON */
 (function(){
   var tankers=[
-    {name:'Barge',dwt:'5K DWT',len:'60m',w:30,h:10},
-    {name:'Handysize',dwt:'35K DWT',len:'180m',w:55,h:14},
-    {name:'Panamax',dwt:'80K DWT',len:'230m',w:70,h:18},
-    {name:'Aframax',dwt:'120K DWT',len:'250m',w:85,h:22},
-    {name:'Suezmax',dwt:'160K DWT',len:'285m',w:100,h:26},
-    {name:'VLCC',dwt:'300K DWT',len:'330m',w:130,h:34},
-    {name:'ULCC',dwt:'550K DWT',len:'415m',w:160,h:42}
+    {name:'Barge',dwt:'5K tonnes',len:'60 m',w:30,h:10},
+    {name:'Handysize',dwt:'35K tonnes',len:'180 m',w:55,h:14},
+    {name:'Panamax',dwt:'80K tonnes',len:'230 m',w:70,h:18},
+    {name:'Aframax',dwt:'120K tonnes',len:'250 m',w:85,h:22},
+    {name:'Suezmax',dwt:'160K tonnes',len:'285 m',w:100,h:26},
+    {name:'VLCC',dwt:'300K tonnes',len:'330 m',w:130,h:34},
+    {name:'ULCC',dwt:'550K tonnes',len:'415 m',w:160,h:42}
   ];
   var html='';
   tankers.forEach(function(t){
