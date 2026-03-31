@@ -290,6 +290,21 @@ select.tool-input option{background:var(--bg3);color:var(--ink)}
 .oil-tl-title{font-weight:600;font-size:.8rem;color:var(--ink);margin-top:.1rem}
 .oil-tl-desc{font-size:.7rem;color:var(--ink3);line-height:1.5;margin-top:.1rem}
 
+/* AT LIVE FUEL PRICES */
+.at-price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--rule);margin-top:.8rem}
+.at-price-card{background:var(--bg);padding:.7rem .8rem;text-align:center}
+.at-price-card:hover{background:var(--bg3)}
+.at-price-region{font-family:var(--mono);font-size:.55rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
+.at-price-val{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--ink);margin-top:.2rem}
+.at-price-val .at-cheap{color:var(--green)}
+.at-price-val .at-exp{color:var(--red)}
+.at-avg-row{display:flex;justify-content:center;gap:2rem;margin-top:.8rem;flex-wrap:wrap}
+.at-avg-item{text-align:center}
+.at-avg-label{font-family:var(--mono);font-size:.55rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
+.at-avg-val{font-family:var(--mono);font-size:1.6rem;font-weight:700;color:var(--accent);line-height:1.1}
+.at-avg-sub{font-size:.65rem;color:var(--ink3);margin-top:.15rem}
+.at-badge{display:inline-block;font-family:var(--mono);font-size:.5rem;font-weight:600;padding:2px 6px;border-radius:2px;background:var(--red-dim);color:var(--red);letter-spacing:.06em;text-transform:uppercase;margin-left:.4rem}
+
 /* SUBTLE BORDER GLOW ON CHART SECTIONS */
 #history-section{border-left:2px solid transparent;transition:border-color .4s}
 #history-section:hover{border-left-color:var(--accent)}
@@ -550,6 +565,22 @@ select.tool-input option{background:var(--bg3);color:var(--ink)}
       </div>
     </div>
     <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.8rem" id="conv-units"></div>
+  </div>
+</div>
+
+<!-- LIVE FUEL PRICES AUSTRIA — E-Control API -->
+<div class="section reveal" id="at-fuel-section">
+  <div class="section-header"><span>Live Fuel Prices Austria <span class="at-badge">AT &middot; Live</span></span><span style="color:var(--ink3)">E-Control Spritpreisrechner &middot; updated every load</span></div>
+  <div id="at-fuel-loading" style="text-align:center;padding:1rem 0;color:var(--ink3);font-family:var(--mono);font-size:.7rem"><span class="live-dot"></span> Fetching live prices from E-Control&hellip;</div>
+  <div id="at-fuel-content" style="display:none">
+    <div class="at-avg-row" id="at-avg"></div>
+    <div style="margin-top:.6rem;font-family:var(--mono);font-size:.55rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;text-align:center">Average by Bundesland</div>
+    <div style="display:flex;gap:.3rem;justify-content:center;margin:.6rem 0" id="at-fuel-toggle">
+      <button class="tool-btn active" data-t="SUP">Super 95</button>
+      <button class="tool-btn" data-t="DIE">Diesel</button>
+    </div>
+    <div class="at-price-grid" id="at-grid"></div>
+    <div style="font-family:var(--mono);font-size:.5rem;color:var(--ink4);margin-top:.6rem;text-align:right" id="at-ts"></div>
   </div>
 </div>
 
@@ -1389,9 +1420,10 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
 /* 15. FUEL COST CALCULATOR — country-specific prices */
 (function(){
   /* Pump prices per liter — Mar 2026, sources: tolls.eu, globalpetrolprices.com */
-  var countries=[
+  /* Austria prices are fallback — overwritten by live E-Control data below */
+  var countries=window._fuelCountries=[
     {name:'Germany',cur:'\u20AC',gas:2.13,die:2.30,flag:'DE'},
-    {name:'Austria',cur:'\u20AC',gas:1.84,die:2.11,flag:'AT'},
+    {name:'Austria',cur:'\u20AC',gas:1.84,die:2.11,flag:'AT',live:false},
     {name:'Switzerland',cur:'CHF',gas:2.06,die:2.38,flag:'CH'},
     {name:'France',cur:'\u20AC',gas:1.97,die:2.11,flag:'FR'},
     {name:'Italy',cur:'\u20AC',gas:1.78,die:2.02,flag:'IT'},
@@ -1457,8 +1489,9 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
     var taxShare=Math.max(100-crudeShare-18,15);
     var refineShare=100-crudeShare-taxShare;
 
-    resultEl.innerHTML='<div class="tool-result">'+c.cur+' '+total.toFixed(2)+'</div>'
-      +'<div class="tool-sub">'+liters+' L '+fuelType+' @ '+c.cur+' '+pricePerL.toFixed(2)+'/L in '+c.name+'</div>'
+    var liveTag=c.live?'<span class="at-badge" style="margin-left:.4rem;font-size:.45rem">Live AT</span>':'';
+    resultEl.innerHTML='<div class="tool-result">'+c.cur+' '+total.toFixed(2)+liveTag+'</div>'
+      +'<div class="tool-sub">'+liters+' L '+fuelType+' @ '+c.cur+' '+pricePerL.toFixed(2)+'/L in '+c.name+(c.live?' (E-Control live)':'')+'</div>'
       +'<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:.6rem">'
       +'<div style="width:'+crudeShare+'%;background:var(--accent)" title="Crude"></div>'
       +'<div style="width:'+taxShare+'%;background:var(--red)" title="Tax"></div>'
@@ -1476,6 +1509,111 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
   var origPR=processAndRender;
   processAndRender=function(a,b){origPR(a,b);update()};
   update();
+})();
+
+/* 15b. LIVE AT FUEL PRICES — E-Control Spritpreisrechner API (no key required) */
+(function(){
+  var AT_API='/api/econtrol/search/gas-stations/by-region';
+  var BL_CODES=[
+    {code:1,name:'Burgenland'},{code:2,name:'K\u00e4rnten'},{code:3,name:'Nieder\u00f6sterreich'},
+    {code:4,name:'Ober\u00f6sterreich'},{code:5,name:'Salzburg'},{code:6,name:'Steiermark'},
+    {code:7,name:'Tirol'},{code:8,name:'Vorarlberg'},{code:9,name:'Wien'}
+  ];
+  var atData={SUP:{},DIE:{}};
+  var atFuelType='SUP';
+
+  function avgPrices(stations){
+    var sum=0,count=0;
+    stations.forEach(function(s){
+      if(s.prices&&s.prices.length){
+        s.prices.forEach(function(p){
+          if(p.amount!=null&&p.amount>0){sum+=p.amount;count++}
+        });
+      }
+    });
+    return count?+(sum/count).toFixed(3):null;
+  }
+
+  function fetchBL(fuelType,bl){
+    return fetch(AT_API+'?code='+bl.code+'&type=BL&fuelType='+fuelType+'&includeClosed=false')
+      .then(function(r){if(!r.ok)throw new Error('E-Control '+r.status);return r.json()})
+      .then(function(stations){return{name:bl.name,avg:avgPrices(stations),count:stations.length}});
+  }
+
+  function renderAT(){
+    var data=atData[atFuelType];
+    var regions=BL_CODES.map(function(bl){return data[bl.name]||{name:bl.name,avg:null,count:0}});
+    var avgs=regions.map(function(r){return r.avg}).filter(function(v){return v!=null});
+    var natAvg=avgs.length?+(avgs.reduce(function(a,b){return a+b},0)/avgs.length).toFixed(3):null;
+    var minAvg=avgs.length?Math.min.apply(null,avgs):null;
+    var maxAvg=avgs.length?Math.max.apply(null,avgs):null;
+
+    var label=atFuelType==='SUP'?'Super 95':'Diesel';
+    document.getElementById('at-avg').innerHTML=
+      '<div class="at-avg-item"><div class="at-avg-label">\u00D8 '+label+' AT</div><div class="at-avg-val">\u20AC '+(natAvg!=null?natAvg.toFixed(3):'--')+'</div><div class="at-avg-sub">per Liter</div></div>'
+      +'<div class="at-avg-item"><div class="at-avg-label">Cheapest</div><div class="at-avg-val" style="color:var(--green)">\u20AC '+(minAvg!=null?minAvg.toFixed(3):'--')+'</div><div class="at-avg-sub">'+regions.filter(function(r){return r.avg===minAvg}).map(function(r){return r.name}).join(', ')+'</div></div>'
+      +'<div class="at-avg-item"><div class="at-avg-label">Most expensive</div><div class="at-avg-val" style="color:var(--red)">\u20AC '+(maxAvg!=null?maxAvg.toFixed(3):'--')+'</div><div class="at-avg-sub">'+regions.filter(function(r){return r.avg===maxAvg}).map(function(r){return r.name}).join(', ')+'</div></div>';
+
+    var gridHtml='';
+    regions.forEach(function(r){
+      var cls='';
+      if(r.avg===minAvg)cls=' at-cheap';
+      else if(r.avg===maxAvg)cls=' at-exp';
+      gridHtml+='<div class="at-price-card"><div class="at-price-region">'+r.name+'</div><div class="at-price-val"><span class="'+cls+'">'+(r.avg!=null?'\u20AC '+r.avg.toFixed(3):'--')+'</span></div></div>';
+    });
+    document.getElementById('at-grid').innerHTML=gridHtml;
+
+    /* Update Austria entry in fuel calculator with live data */
+    if(window._fuelCountries){
+      var supAvgs=BL_CODES.map(function(bl){return atData.SUP[bl.name]}).filter(function(r){return r&&r.avg!=null}).map(function(r){return r.avg});
+      var dieAvgs=BL_CODES.map(function(bl){return atData.DIE[bl.name]}).filter(function(r){return r&&r.avg!=null}).map(function(r){return r.avg});
+      if(supAvgs.length&&dieAvgs.length){
+        var liveGas=+(supAvgs.reduce(function(a,b){return a+b},0)/supAvgs.length).toFixed(3);
+        var liveDie=+(dieAvgs.reduce(function(a,b){return a+b},0)/dieAvgs.length).toFixed(3);
+        window._fuelCountries.forEach(function(c){
+          if(c.flag==='AT'){c.gas=liveGas;c.die=liveDie;c.live=true}
+        });
+      }
+    }
+  }
+
+  /* Toggle SUP / DIE */
+  var toggleEl=document.getElementById('at-fuel-toggle');
+  toggleEl.querySelectorAll('.tool-btn').forEach(function(btn){
+    btn.onclick=function(){
+      toggleEl.querySelectorAll('.tool-btn').forEach(function(b){b.classList.remove('active')});
+      btn.classList.add('active');
+      atFuelType=btn.dataset.t;
+      renderAT();
+    };
+  });
+
+  function fetchAll(fuelType){
+    return Promise.all(BL_CODES.map(function(bl){return fetchBL(fuelType,bl)})).then(function(results){
+      results.forEach(function(r){atData[fuelType][r.name]=r});
+    });
+  }
+
+  /* Check cache */
+  var cached=getCache('at_fuel');
+  if(cached){
+    atData=cached;
+    document.getElementById('at-fuel-loading').style.display='none';
+    document.getElementById('at-fuel-content').style.display='block';
+    document.getElementById('at-ts').textContent='cached \u00b7 refreshing in background\u2026';
+    renderAT();
+  }
+
+  /* Fetch live */
+  Promise.all([fetchAll('SUP'),fetchAll('DIE')]).then(function(){
+    setCache('at_fuel',atData);
+    document.getElementById('at-fuel-loading').style.display='none';
+    document.getElementById('at-fuel-content').style.display='block';
+    document.getElementById('at-ts').textContent='Source: E-Control Spritpreisrechner \u00b7 '+new Date().toLocaleString('de-AT');
+    renderAT();
+  }).catch(function(err){
+    document.getElementById('at-fuel-loading').innerHTML='<span style="color:var(--red)">E-Control API failed: '+err.message+'</span>';
+  });
 })();
 
 /* 16. UNIT CONVERTER */
