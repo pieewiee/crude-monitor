@@ -207,6 +207,36 @@ html{overflow-x:hidden}
 .prod-val{font-family:var(--mono);font-size:.65rem;font-weight:600;color:var(--ink);min-width:50px;text-align:right}
 
 
+/* INTERACTIVE TOOLS */
+.tool-input{font-family:var(--mono);font-size:.75rem;background:var(--bg3);border:1px solid var(--rule2);color:var(--ink);padding:.4rem .6rem;border-radius:var(--radius);width:100%;outline:none}
+.tool-input:focus{border-color:var(--accent)}
+.tool-label{font-family:var(--mono);font-size:.6rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+.tool-result{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--accent);margin-top:.5rem}
+.tool-sub{font-size:.7rem;color:var(--ink3);margin-top:.2rem}
+.tool-row{display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:.8rem}
+.tool-row>div{flex:1;min-width:120px}
+.tool-slider{-webkit-appearance:none;width:100%;height:4px;background:var(--bg4);border-radius:2px;outline:none;margin-top:.3rem}
+.tool-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;border:2px solid var(--bg)}
+.tool-slider::-moz-range-thumb{width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;border:2px solid var(--bg)}
+.tool-btn{font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;padding:.5rem 1.2rem;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.tool-btn:hover{background:var(--accent);color:var(--bg)}
+.tool-btn.active{background:var(--accent);color:var(--bg)}
+.converter-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:end}
+.converter-arrow{font-family:var(--mono);color:var(--accent);font-size:1rem;text-align:center;padding-bottom:.5rem}
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.8rem}
+.quiz-opt{font-family:var(--mono);font-size:.75rem;padding:.6rem;background:var(--bg3);border:1px solid var(--rule2);border-radius:var(--radius);cursor:pointer;text-align:center;transition:all .15s}
+.quiz-opt:hover{border-color:var(--ink3);background:var(--bg4)}
+.quiz-opt.correct{border-color:var(--green);background:var(--green-dim);color:var(--green)}
+.quiz-opt.wrong{border-color:var(--red);background:var(--red-dim);color:var(--red)}
+.quiz-score{font-family:var(--mono);font-size:.65rem;color:var(--ink3)}
+.quiz-date{font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:.5rem 0}
+.quiz-hint{font-size:.7rem;color:var(--ink3);margin-top:.3rem}
+.co2-compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.8rem;margin-top:.8rem}
+.co2-item{text-align:center;padding:.6rem;background:var(--bg3);border:1px solid var(--rule);border-radius:var(--radius)}
+.co2-val{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--accent)}
+.co2-unit{font-family:var(--mono);font-size:.55rem;color:var(--ink2);text-transform:uppercase;margin-top:.1rem}
+.co2-desc{font-size:.6rem;color:var(--ink3);margin-top:.2rem}
+
 /* ODOMETER */
 .odo-wrap{display:inline-flex;gap:2px;overflow:hidden;vertical-align:bottom}
 .odo-digit{display:inline-block;width:clamp(.65em,.9em,1em);height:1.2em;overflow:hidden;position:relative;background:var(--bg3);border:1px solid var(--rule2);border-radius:2px;text-align:center}
@@ -478,6 +508,54 @@ html{overflow-x:hidden}
 <div class="section reveal">
   <div class="section-header"><span>Tanker Size Comparison</span><span style="color:var(--ink3)">Deadweight tonnage &middot; proportional</span></div>
   <div class="tanker-wrap"><div class="tanker-row" id="tanker-row"></div></div>
+</div>
+
+<!-- INTERACTIVE: FUEL COST CALCULATOR + UNIT CONVERTER -->
+<div class="grid-2 reveal">
+  <div class="gcell">
+    <div class="section-header"><span>Fuel Cost Calculator</span><span style="color:var(--accent)">Interactive</span></div>
+    <div class="tool-label">Tank size</div>
+    <div style="display:flex;align-items:center;gap:.8rem">
+      <input type="range" class="tool-slider" id="tank-slider" min="10" max="120" value="50" step="5">
+      <span id="tank-val" style="font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--ink);min-width:40px">50 L</span>
+    </div>
+    <div id="fuel-result"></div>
+  </div>
+  <div class="gcell">
+    <div class="section-header"><span>Unit Converter</span><span style="color:var(--accent)">Interactive</span></div>
+    <div class="converter-grid">
+      <div>
+        <div class="tool-label">Amount</div>
+        <input type="number" class="tool-input" id="conv-input" value="1" min="0" step="any">
+      </div>
+      <div class="converter-arrow">&rarr;</div>
+      <div>
+        <div class="tool-label">Result</div>
+        <div id="conv-result" class="tool-result" style="font-size:.9rem">—</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.8rem" id="conv-units"></div>
+  </div>
+</div>
+
+<!-- INTERACTIVE: QUIZ + CO2 CALCULATOR -->
+<div class="grid-2 reveal">
+  <div class="gcell">
+    <div class="section-header"><span>Guess the Oil Price</span><span class="quiz-score" id="quiz-score">0 / 0</span></div>
+    <div id="quiz-area">
+      <div style="text-align:center;padding:1rem 0;color:var(--ink3);font-family:var(--mono);font-size:.7rem">Loading quiz data&hellip;</div>
+    </div>
+  </div>
+  <div class="gcell">
+    <div class="section-header"><span>CO&#8322; Footprint</span><span style="color:var(--accent)">Interactive</span></div>
+    <div class="tool-label">Barrels of oil</div>
+    <div style="display:flex;align-items:center;gap:.8rem">
+      <input type="range" class="tool-slider" id="co2-slider" min="1" max="1000" value="100" step="1">
+      <span id="co2-val" style="font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--ink);min-width:55px">100 bbl</span>
+    </div>
+    <div id="co2-result" class="tool-result">—</div>
+    <div class="co2-compare" id="co2-compare"></div>
+  </div>
 </div>
 
 <footer class="foot">
@@ -1291,6 +1369,171 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
   tick();
 })();
 
+/* ===================== INTERACTIVE TOOLS ===================== */
+
+/* 15. FUEL COST CALCULATOR */
+(function(){
+  var slider=document.getElementById('tank-slider');
+  var valEl=document.getElementById('tank-val');
+  var resultEl=document.getElementById('fuel-result');
+  /* Rough model: crude → refining → tax → pump price */
+  var TAX_PER_L=0.65; /* avg EU tax ~€0.65/L */
+  var REFINE_PER_L=0.12;
+  var MARKUP_PER_L=0.08;
+  var LITERS_PER_BBL=159;
+  function update(){
+    var liters=parseInt(slider.value);
+    valEl.textContent=liters+' L';
+    var latestBrent=(historyData&&historyData.length)?historyData[historyData.length-1].brent:null;
+    if(!latestBrent){resultEl.innerHTML='<div class="tool-sub">Waiting for price data\u2026</div>';return}
+    var crudePerL=latestBrent/LITERS_PER_BBL;
+    var pumpPrice=crudePerL+REFINE_PER_L+TAX_PER_L+MARKUP_PER_L;
+    var total=pumpPrice*liters;
+    resultEl.innerHTML='<div class="tool-result">\u2248 \u20AC'+total.toFixed(2)+'</div>'
+      +'<div class="tool-sub">@ \u20AC'+pumpPrice.toFixed(2)+'/L pump price estimate</div>'
+      +'<div style="font-size:.6rem;color:var(--ink4);margin-top:.4rem">'
+      +'Crude: \u20AC'+crudePerL.toFixed(2)+' + Refining: \u20AC'+REFINE_PER_L.toFixed(2)+' + Tax: \u20AC'+TAX_PER_L.toFixed(2)+' + Margin: \u20AC'+MARKUP_PER_L.toFixed(2)+' per liter'
+      +'</div>';
+  }
+  slider.addEventListener('input',update);
+  /* Re-run when data arrives */
+  var origPR=processAndRender;
+  processAndRender=function(a,b){origPR(a,b);update()};
+  update();
+})();
+
+/* 16. UNIT CONVERTER */
+(function(){
+  var conversions=[
+    {label:'bbl \u2192 Liters',from:'bbl',to:'L',factor:158.987},
+    {label:'bbl \u2192 Gallons',from:'bbl',to:'gal',factor:42},
+    {label:'bbl \u2192 Tonnes',from:'bbl',to:'t',factor:0.1364},
+    {label:'L \u2192 Barrels',from:'L',to:'bbl',factor:1/158.987},
+    {label:'gal \u2192 Barrels',from:'gal',to:'bbl',factor:1/42},
+    {label:'$/bbl \u2192 \u20AC/L',from:'$/bbl',to:'\u20AC/L',factor:1/158.987}
+  ];
+  var active=0;
+  var input=document.getElementById('conv-input');
+  var result=document.getElementById('conv-result');
+  var btnsEl=document.getElementById('conv-units');
+  function renderBtns(){
+    var html='';
+    conversions.forEach(function(c,i){
+      html+='<button class="tool-btn'+(i===active?' active':'')+'" data-i="'+i+'">'+c.label+'</button>';
+    });
+    btnsEl.innerHTML=html;
+    btnsEl.querySelectorAll('.tool-btn').forEach(function(btn){
+      btn.onclick=function(){active=parseInt(btn.dataset.i);renderBtns();calc()};
+    });
+  }
+  function calc(){
+    var v=parseFloat(input.value)||0;
+    var c=conversions[active];
+    var r=v*c.factor;
+    result.textContent=r.toFixed(r<1?4:2)+' '+c.to;
+  }
+  input.addEventListener('input',calc);
+  renderBtns();
+  calc();
+})();
+
+/* 17. GUESS THE OIL PRICE QUIZ */
+(function(){
+  var quizArea=document.getElementById('quiz-area');
+  var scoreEl=document.getElementById('quiz-score');
+  var correct=0,total=0;
+  var quizReady=false;
+
+  function startQuiz(){
+    if(!historyData||historyData.length<100){quizArea.innerHTML='<div style="text-align:center;padding:1rem;color:var(--ink3);font-family:var(--mono);font-size:.7rem">Need price data for quiz</div>';return}
+    quizReady=true;
+    nextQuestion();
+  }
+
+  function nextQuestion(){
+    var brentOnly=historyData.filter(function(d){return d.brent!=null&&d.brent>5});
+    var idx=Math.floor(Math.random()*brentOnly.length);
+    var d=brentOnly[idx];
+    var realPrice=d.brent;
+    /* Generate 4 options: 1 correct + 3 plausible wrong */
+    var opts=[realPrice];
+    while(opts.length<4){
+      var offset=(Math.random()-.5)*realPrice*0.6;
+      var fake=Math.round((realPrice+offset)*100)/100;
+      if(fake>2&&opts.indexOf(fake)===-1)opts.push(fake);
+    }
+    opts.sort(function(){return Math.random()-.5});
+
+    var html='<div class="quiz-date">'+formatQuizDate(d.date)+'</div>';
+    html+='<div class="quiz-hint">What was Brent crude trading at?</div>';
+    html+='<div class="quiz-options">';
+    opts.forEach(function(o){
+      html+='<div class="quiz-opt" data-val="'+o+'">$'+o.toFixed(2)+'</div>';
+    });
+    html+='</div>';
+    quizArea.innerHTML=html;
+
+    quizArea.querySelectorAll('.quiz-opt').forEach(function(btn){
+      btn.onclick=function(){
+        if(btn.classList.contains('correct')||btn.classList.contains('wrong'))return;
+        total++;
+        var picked=parseFloat(btn.dataset.val);
+        quizArea.querySelectorAll('.quiz-opt').forEach(function(b){
+          var v=parseFloat(b.dataset.val);
+          if(v===realPrice)b.classList.add('correct');
+          else b.style.opacity='.4';
+        });
+        if(picked===realPrice)correct++;
+        else btn.classList.add('wrong');
+        scoreEl.textContent=correct+' / '+total;
+        setTimeout(nextQuestion,1800);
+      };
+    });
+  }
+
+  function formatQuizDate(dateStr){
+    var parts=dateStr.split('-');
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[parseInt(parts[1])-1]+' '+parseInt(parts[2])+', '+parts[0];
+  }
+
+  /* Hook into data load */
+  var checkInterval=setInterval(function(){
+    if(historyData&&historyData.length>100){clearInterval(checkInterval);startQuiz()}
+  },500);
+})();
+
+/* 18. CO2 FOOTPRINT CALCULATOR */
+(function(){
+  var slider=document.getElementById('co2-slider');
+  var valEl=document.getElementById('co2-val');
+  var resultEl=document.getElementById('co2-result');
+  var compareEl=document.getElementById('co2-compare');
+  /* 1 barrel of oil ≈ 0.43 tonnes CO2 when burned */
+  var CO2_PER_BBL=0.43;
+  function update(){
+    var barrels=parseInt(slider.value);
+    valEl.textContent=barrels+' bbl';
+    var co2=barrels*CO2_PER_BBL;
+    resultEl.textContent=co2.toFixed(1)+' tonnes CO\u2082';
+    /* Comparisons */
+    var items=[
+      {val:(co2/0.255).toFixed(0),unit:'flights',desc:'London \u2192 Paris per passenger'},
+      {val:(co2/4.6).toFixed(1),unit:'car years',desc:'Avg. passenger car (12,000 mi/yr)'},
+      {val:Math.round(co2/0.022).toLocaleString('en-US'),unit:'trees needed',desc:'To absorb in one year'},
+      {val:(co2*1000/110).toFixed(0),unit:'steak dinners',desc:'300g beef @ 110 kg CO\u2082/dinner'},
+      {val:(co2/0.005).toFixed(0),unit:'smartphone charges',desc:'Full charge cycles'},
+      {val:(co2/2.3).toFixed(1),unit:'transatlantic flights',desc:'NY \u2192 London economy'}
+    ];
+    var html='';
+    items.forEach(function(it){
+      html+='<div class="co2-item"><div class="co2-val">'+it.val+'</div><div class="co2-unit">'+it.unit+'</div><div class="co2-desc">'+it.desc+'</div></div>';
+    });
+    compareEl.innerHTML=html;
+  }
+  slider.addEventListener('input',update);
+  update();
+})();
 </script>
 </body>
 </html>
