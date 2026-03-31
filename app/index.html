@@ -530,18 +530,12 @@ select.tool-input option{background:var(--bg3);color:var(--ink)}
 <!-- INTERACTIVE: FUEL COST CALCULATOR + UNIT CONVERTER -->
 <div class="grid-2 reveal">
   <div class="gcell">
-    <div class="section-header"><span>Fuel Cost Calculator</span><span style="color:var(--accent)">Interactive</span></div>
-    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem">
-      <div style="flex:1;min-width:120px">
-        <div class="tool-label">Country</div>
-        <select class="tool-input" id="fuel-country"></select>
-      </div>
-      <div style="min-width:100px">
-        <div class="tool-label">Fuel type</div>
-        <div style="display:flex;gap:.3rem;margin-top:.3rem" id="fuel-type-btns">
-          <button class="tool-btn active" data-t="gasoline">Gasoline</button>
-          <button class="tool-btn" data-t="diesel">Diesel</button>
-        </div>
+    <div class="section-header"><span>Fuel Cost Calculator <span class="at-badge">AT &middot; Live</span></span><span style="color:var(--accent)">Interactive</span></div>
+    <div style="margin-bottom:.6rem">
+      <div class="tool-label">Fuel type</div>
+      <div style="display:flex;gap:.3rem;margin-top:.3rem" id="fuel-type-btns">
+        <button class="tool-btn active" data-t="gasoline">Super 95</button>
+        <button class="tool-btn" data-t="diesel">Diesel</button>
       </div>
     </div>
     <div class="tool-label">Tank size</div>
@@ -1417,53 +1411,14 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
 
 /* ===================== INTERACTIVE TOOLS ===================== */
 
-/* 15. FUEL COST CALCULATOR — country-specific prices */
+/* 15. FUEL COST CALCULATOR — Austria only, live E-Control prices */
 (function(){
-  /* Pump prices per liter — Mar 2026, sources: tolls.eu, globalpetrolprices.com */
-  /* Austria prices are fallback — overwritten by live E-Control data below */
-  var countries=window._fuelCountries=[
-    {name:'Germany',cur:'\u20AC',gas:2.13,die:2.30,flag:'DE'},
-    {name:'Austria',cur:'\u20AC',gas:1.84,die:2.11,flag:'AT',live:false},
-    {name:'Switzerland',cur:'CHF',gas:2.06,die:2.38,flag:'CH'},
-    {name:'France',cur:'\u20AC',gas:1.97,die:2.11,flag:'FR'},
-    {name:'Italy',cur:'\u20AC',gas:1.78,die:2.02,flag:'IT'},
-    {name:'Spain',cur:'\u20AC',gas:1.73,die:1.88,flag:'ES'},
-    {name:'Netherlands',cur:'\u20AC',gas:2.35,die:2.48,flag:'NL'},
-    {name:'Belgium',cur:'\u20AC',gas:1.80,die:2.16,flag:'BE'},
-    {name:'Denmark',cur:'\u20AC',gas:2.25,die:2.38,flag:'DK'},
-    {name:'Finland',cur:'\u20AC',gas:2.12,die:2.32,flag:'FI'},
-    {name:'Ireland',cur:'\u20AC',gas:1.89,die:2.08,flag:'IE'},
-    {name:'Portugal',cur:'\u20AC',gas:1.92,die:2.05,flag:'PT'},
-    {name:'Greece',cur:'\u20AC',gas:2.04,die:2.06,flag:'GR'},
-    {name:'UK',cur:'\u00A3',gas:1.42,die:1.64,flag:'GB'},
-    {name:'Norway',cur:'\u20AC',gas:2.38,die:2.45,flag:'NO'},
-    {name:'Sweden',cur:'\u20AC',gas:1.77,die:2.24,flag:'SE'},
-    {name:'Poland',cur:'\u20AC',gas:1.69,die:1.99,flag:'PL'},
-    {name:'Czechia',cur:'\u20AC',gas:1.69,die:1.93,flag:'CZ'},
-    {name:'Hungary',cur:'\u20AC',gas:1.58,die:1.67,flag:'HU'},
-    {name:'Croatia',cur:'\u20AC',gas:1.57,die:1.69,flag:'HR'},
-    {name:'USA',cur:'$',gas:0.95,die:1.05,flag:'US'},
-    {name:'Canada',cur:'C$',gas:1.75,die:1.85,flag:'CA'},
-    {name:'Australia',cur:'A$',gas:2.10,die:1.95,flag:'AU'},
-    {name:'Japan',cur:'\u00A5',gas:185,die:165,flag:'JP'},
-    {name:'India',cur:'\u20B9',gas:105,die:95,flag:'IN'},
-    {name:'Brazil',cur:'R$',gas:6.50,die:6.10,flag:'BR'},
-    {name:'Saudi Arabia',cur:'SAR',gas:2.55,die:1.60,flag:'SA'},
-    {name:'UAE',cur:'AED',gas:2.48,die:2.72,flag:'AE'}
-  ];
+  /* Fallback prices until E-Control data arrives */
+  window._fuelAT={cur:'\u20AC',gas:1.84,die:2.11,live:false};
   var slider=document.getElementById('tank-slider');
   var valEl=document.getElementById('tank-val');
   var resultEl=document.getElementById('fuel-result');
-  var select=document.getElementById('fuel-country');
   var fuelType='gasoline';
-
-  /* Populate country dropdown */
-  countries.forEach(function(c,i){
-    var opt=document.createElement('option');
-    opt.value=i;
-    opt.textContent=c.flag+' '+c.name;
-    select.appendChild(opt);
-  });
 
   /* Fuel type toggle */
   var typeBtns=document.getElementById('fuel-type-btns');
@@ -1479,19 +1434,19 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
   function update(){
     var liters=parseInt(slider.value);
     valEl.textContent=liters+' L';
-    var c=countries[select.value];
+    var c=window._fuelAT;
+    var label=fuelType==='gasoline'?'Super 95':'Diesel';
     var pricePerL=fuelType==='gasoline'?c.gas:c.die;
     var total=pricePerL*liters;
-    /* Breakdown estimate: crude ~35-55%, tax ~25-45%, refining+margin ~15-20% */
     var latestBrent=(historyData&&historyData.length)?historyData[historyData.length-1].brent:null;
     var crudeShare=latestBrent?(latestBrent/158.987)/pricePerL*100:40;
     crudeShare=Math.min(crudeShare,65);
     var taxShare=Math.max(100-crudeShare-18,15);
     var refineShare=100-crudeShare-taxShare;
 
-    var liveTag=c.live?'<span class="at-badge" style="margin-left:.4rem;font-size:.45rem">Live AT</span>':'';
-    resultEl.innerHTML='<div class="tool-result">'+c.cur+' '+total.toFixed(2)+liveTag+'</div>'
-      +'<div class="tool-sub">'+liters+' L '+fuelType+' @ '+c.cur+' '+pricePerL.toFixed(2)+'/L in '+c.name+(c.live?' (E-Control live)':'')+'</div>'
+    var src=c.live?'E-Control live':'fallback';
+    resultEl.innerHTML='<div class="tool-result">'+c.cur+' '+total.toFixed(2)+'</div>'
+      +'<div class="tool-sub">'+liters+' L '+label+' @ '+c.cur+' '+pricePerL.toFixed(2)+'/L in Austria ('+src+')</div>'
       +'<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:.6rem">'
       +'<div style="width:'+crudeShare+'%;background:var(--accent)" title="Crude"></div>'
       +'<div style="width:'+taxShare+'%;background:var(--red)" title="Tax"></div>'
@@ -1503,9 +1458,8 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
       +'<span>\u25A0 <span style="color:var(--blue)">Refining & margin '+refineShare.toFixed(0)+'%</span></span>'
       +'</div>';
   }
+  window._fuelCalcUpdate=update;
   slider.addEventListener('input',update);
-  select.addEventListener('change',update);
-  /* Re-run when data arrives */
   var origPR=processAndRender;
   processAndRender=function(a,b){origPR(a,b);update()};
   update();
@@ -1563,16 +1517,15 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
     });
     document.getElementById('at-grid').innerHTML=gridHtml;
 
-    /* Update Austria entry in fuel calculator with live data */
-    if(window._fuelCountries){
+    /* Update fuel calculator with live AT data */
+    if(window._fuelAT){
       var supAvgs=BL_CODES.map(function(bl){return atData.SUP[bl.name]}).filter(function(r){return r&&r.avg!=null}).map(function(r){return r.avg});
       var dieAvgs=BL_CODES.map(function(bl){return atData.DIE[bl.name]}).filter(function(r){return r&&r.avg!=null}).map(function(r){return r.avg});
       if(supAvgs.length&&dieAvgs.length){
-        var liveGas=+(supAvgs.reduce(function(a,b){return a+b},0)/supAvgs.length).toFixed(3);
-        var liveDie=+(dieAvgs.reduce(function(a,b){return a+b},0)/dieAvgs.length).toFixed(3);
-        window._fuelCountries.forEach(function(c){
-          if(c.flag==='AT'){c.gas=liveGas;c.die=liveDie;c.live=true}
-        });
+        window._fuelAT.gas=+(supAvgs.reduce(function(a,b){return a+b},0)/supAvgs.length).toFixed(3);
+        window._fuelAT.die=+(dieAvgs.reduce(function(a,b){return a+b},0)/dieAvgs.length).toFixed(3);
+        window._fuelAT.live=true;
+        if(window._fuelCalcUpdate)window._fuelCalcUpdate();
       }
     }
   }
