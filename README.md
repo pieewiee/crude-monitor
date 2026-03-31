@@ -1,6 +1,8 @@
 # CRUDE · Monitor
 
-Interaktives Erdöl & Raffinerie Dashboard — brutalist editorial design, served from a lightweight nginx container.
+Interactive crude oil & refinery dashboard — brutalist editorial design, live EIA data, served from a lightweight nginx container.
+
+**[oil.tillniederauer.de](https://oil.tillniederauer.de)**
 
 ![Dashboard](https://img.shields.io/badge/style-brutalist%20editorial-black)
 ![Docker](https://img.shields.io/badge/docker-nginx%201.27--alpine-blue)
@@ -8,24 +10,41 @@ Interaktives Erdöl & Raffinerie Dashboard — brutalist editorial design, serve
 
 ## Features
 
-- **Destillationsturm** — Fraktionen mit Temperaturbereichen und Ausbeuten
-- **Rohölsorten** — Brent, WTI, Maya, Arab Heavy u.a. mit API-Grad und Schwefelgehalt
-- **Molekulare Zusammensetzung** — Was Rohöl leicht oder schwer macht
-- **Katalytisches Cracken** — Schritt-für-Schritt FCC-Prozess
-- **Handelsströme** — Globale Import/Export-Beziehungen
-- **Barrel Breakdown** — Was aus 159 Litern Rohöl wird
-- **Yield Comparison** — Raffinerieausbeute verschiedener Sorten im Vergleich
+### Live Data (US EIA API)
+- **Historical Benchmark Prices** — Brent & WTI weekly spot prices since 1987 with 10w/40w moving averages
+- **Brent–WTI Spread** — price differential chart
+- **US Crude Oil Inventories** — weekly commercial stocks
+- **Henry Hub Natural Gas** — live spot price in ticker
+- **Geopolitical Incident Markers** — Gulf War, 9/11, Financial Crisis, COVID, Russia-Ukraine, Iran 2026, and more annotated on the price timeline
+
+### Analytics
+- **Monthly Returns Heatmap** — Brent % change by month/year
+- **Seasonal Pattern** — average monthly return since 1987
+- **12-Week Rolling Volatility** — annualized %
+- **Weekly Returns Distribution** — histogram of Brent price changes
+
+### Reference Data
+- **Atmospheric Distillation** — fractions with temperature ranges and yields
+- **Benchmark Crude Oils** — Brent, WTI, Maya, Arab Heavy with API gravity and sulfur content
+- **Global Oil Fields Map** — interactive D3 world map with major production regions
+- **Catalytic Cracking (FCC)** — step-by-step process with molecular breakdown
+- **Major Trade Flows** — global import/export relationships
+- **Barrel Breakdown** — what one barrel of crude oil yields
+- **Refinery Yield Comparison** — output by crude grade
+
+### Performance
+- **nginx reverse proxy** with 6h server-side cache for EIA API responses
+- **localStorage cache** with 6h TTL for instant repeat page loads
+- **Weekly frequency** data — ~2k rows per series instead of ~10k daily
 
 ## Quick Start
 
 ### Docker
 
 ```bash
-# Lokal bauen und starten
 docker build -t crude-monitor .
-docker run -d -p 8080:80 crude-monitor
-
-# Dann: http://localhost:8080
+docker run -d -p 8080:80 -e EIA_API_KEY=your_key_here crude-monitor
+# → http://localhost:8080
 ```
 
 ### Docker Compose
@@ -36,42 +55,55 @@ services:
     build: .
     ports:
       - "8080:80"
+    environment:
+      - EIA_API_KEY=your_key_here
     restart: unless-stopped
 ```
 
-### Aus GitHub Container Registry ziehen
+### GitHub Container Registry
 
 ```bash
-docker pull ghcr.io/<dein-username>/crude-monitor:latest
-docker run -d -p 8080:80 ghcr.io/<dein-username>/crude-monitor:latest
+docker pull ghcr.io/pieewiee/crude-monitor:latest
+docker run -d -p 8080:80 -e EIA_API_KEY=your_key_here ghcr.io/pieewiee/crude-monitor:latest
 ```
+
+> Get a free EIA API key at [eia.gov/opendata](https://www.eia.gov/opendata/)
+
+## Architecture
+
+```
+Browser (index.html)
+  → nginx reverse proxy (/api/eia/)
+    → api.eia.gov (API key injected server-side, cached 6h)
+```
+
+The EIA API key is **never exposed to the browser**. The nginx entrypoint script writes the key from the `EIA_API_KEY` environment variable into an nginx config snippet at container startup, which injects it into proxied requests via URL rewrite.
 
 ## CI/CD
 
-Der GitHub Actions Workflow baut automatisch bei jedem Push auf `main`:
+GitHub Actions builds and pushes to `ghcr.io` on every push to `main`:
 
-1. Baut das Docker Image mit Buildx
-2. Pushed zu `ghcr.io/<repo>`
-3. Tags: `latest`, Branch-Name, SHA, Semver (bei Tags)
+1. Builds Docker image with Buildx
+2. Pushes to `ghcr.io/<repo>`
+3. Tags: `latest`, branch name, SHA, semver (on tags)
 
-### Setup
-
-Das Repo braucht keine Secrets — `GITHUB_TOKEN` hat automatisch `packages:write` Rechte.
+No secrets needed — `GITHUB_TOKEN` has `packages:write` permissions automatically.
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
-| Frontend | Vanilla HTML/CSS/JS, Chart.js |
-| Fonts | DM Serif Display, IBM Plex Mono, IBM Plex Sans |
-| Server | nginx 1.27 alpine |
-| Container | Docker (multi-stage nicht nötig — pure static files) |
+| Frontend | Vanilla HTML/CSS/JS, Chart.js, D3.js |
+| Fonts | DM Serif Display, JetBrains Mono, Instrument Sans |
+| Data | US EIA Open Data API v2 |
+| Server | nginx 1.27 alpine (reverse proxy + cache) |
+| Container | Docker |
 | CI | GitHub Actions → ghcr.io |
 
-## Lokal entwickeln
+## Local Development
 
-Einfach `app/index.html` im Browser öffnen — keine Build-Tools nötig.
+Open `app/index.html` in a browser — no build tools needed. Live EIA data requires the nginx proxy (run via Docker).
 
-## Lizenz
+## License
 
 MIT
