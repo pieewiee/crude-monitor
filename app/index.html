@@ -161,20 +161,6 @@ html{overflow-x:hidden}
 .heatmap td{padding:3px 6px;text-align:center;min-width:38px;border:1px solid var(--bg)}
 .heatmap td:first-child{font-weight:600;color:var(--ink2);text-align:left;background:var(--bg);position:sticky;left:0;border:none}
 
-/* FILM GRAIN OVERLAY */
-body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat;background-size:256px 256px;animation:grain 0.5s steps(1) infinite}
-@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-5%,-5%)}50%{transform:translate(5%,2%)}75%{transform:translate(-2%,5%)}100%{transform:translate(0,0)}}
-
-/* ANIMATED PIPELINE */
-.pipeline-wrap{position:relative;height:60px;margin:1rem 0;overflow:hidden}
-.pipeline-pipe{position:absolute;top:22px;left:0;right:0;height:16px;background:var(--bg4);border-radius:8px;border:1px solid var(--rule2)}
-.pipeline-pipe::after{content:'';position:absolute;top:2px;left:0;right:0;height:4px;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent);border-radius:4px}
-.pipeline-dot{position:absolute;top:26px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:flowDot 3s linear infinite}
-@keyframes flowDot{from{left:-8px}to{left:100%}}
-.pipeline-label{position:absolute;font-family:var(--mono);font-size:.55rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
-.pipeline-label.left{left:0;top:0}
-.pipeline-label.right{right:0;top:0}
-.pipeline-valve{position:absolute;top:16px;width:28px;height:28px;background:var(--bg3);border:2px solid var(--rule2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem}
 
 /* DEPTH GAUGE */
 .depth-gauge{position:relative;display:flex;gap:0;height:420px;margin:.5rem 0}
@@ -219,8 +205,6 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;point
 .prod-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
 .prod-val{font-family:var(--mono);font-size:.65rem;font-weight:600;color:var(--ink);min-width:50px;text-align:right}
 
-/* CURSOR TRAIL */
-.cursor-drop{position:fixed;pointer-events:none;z-index:9998;width:6px;height:8px;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;background:var(--accent);opacity:.6;transition:opacity .8s ease,transform .8s ease}
 
 /* ODOMETER */
 .odo-wrap{display:inline-flex;gap:2px;overflow:hidden;vertical-align:bottom}
@@ -317,7 +301,6 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;point
   .oil-quote{padding:1.5rem 1rem}
   .scale-grid{grid-template-columns:repeat(2,1fr);gap:.8rem}
   .tanker-row{gap:.8rem}
-  .cursor-drop{display:none}
 }
 @media(max-width:400px){
   .stat-card{min-width:100%}
@@ -472,11 +455,6 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;point
   <div class="oil-quote" id="oil-quote"></div>
 </div>
 
-<!-- ANIMATED PIPELINE -->
-<div class="section reveal">
-  <div class="section-header"><span>Crude Transport Pipeline</span><span style="color:var(--ink3)">Animated flow</span></div>
-  <div class="pipeline-wrap" id="pipeline"></div>
-</div>
 
 <!-- DAILY OUTPUT SCALE -->
 <div class="section reveal" style="text-align:center;padding:2.5rem 2rem">
@@ -1199,19 +1177,6 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
   setInterval(showQuote,12000);
 })();
 
-/* 8. ANIMATED PIPELINE */
-(function(){
-  var wrap=document.getElementById('pipeline');
-  var html='<div class="pipeline-label left">\u26AB Wellhead</div><div class="pipeline-label right">Refinery \u26AB</div>';
-  html+='<div class="pipeline-pipe"></div>';
-  html+='<div class="pipeline-valve" style="left:25%">\u2699</div>';
-  html+='<div class="pipeline-valve" style="left:50%">\u2699</div>';
-  html+='<div class="pipeline-valve" style="left:75%">\u2699</div>';
-  for(var i=0;i<6;i++){
-    html+='<div class="pipeline-dot" style="animation-delay:'+(i*-.5)+'s"></div>';
-  }
-  wrap.innerHTML=html;
-})();
 
 /* 9. DAILY OUTPUT SCALE COMPARISONS */
 (function(){
@@ -1328,33 +1293,6 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
   tick();
 })();
 
-/* 14. CURSOR OIL DROP TRAIL */
-(function(){
-  if('ontouchstart' in window)return;
-  var drops=[];
-  var maxDrops=12;
-  document.addEventListener('mousemove',function(e){
-    if(Math.random()>0.3)return;
-    var drop=document.createElement('div');
-    drop.className='cursor-drop';
-    drop.style.left=e.clientX+'px';
-    drop.style.top=e.clientY+'px';
-    document.body.appendChild(drop);
-    drops.push(drop);
-    requestAnimationFrame(function(){
-      drop.style.opacity='0';
-      drop.style.transform='translateY(20px) scale(0.3)';
-    });
-    setTimeout(function(){
-      drop.remove();
-      drops.shift();
-    },800);
-    if(drops.length>maxDrops){
-      var old=drops.shift();
-      old.remove();
-    }
-  });
-})();
 </script>
 </body>
 </html>
