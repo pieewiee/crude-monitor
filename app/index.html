@@ -1388,27 +1388,36 @@ fetchEIA(EIA_BASE_PET+'pri/spt/data/','RNGWHHD').then(function(rows){
 
 /* 15. FUEL COST CALCULATOR — country-specific prices */
 (function(){
-  /* Avg pump prices per liter (2025 estimates): gasoline / diesel, currency symbol */
+  /* Pump prices per liter — Mar 2026, sources: tolls.eu, globalpetrolprices.com */
   var countries=[
-    {name:'Germany',cur:'\u20AC',gas:1.75,die:1.62,flag:'DE'},
-    {name:'Austria',cur:'\u20AC',gas:1.58,die:1.55,flag:'AT'},
-    {name:'Switzerland',cur:'CHF',gas:1.82,die:1.90,flag:'CH'},
-    {name:'France',cur:'\u20AC',gas:1.85,die:1.72,flag:'FR'},
-    {name:'Italy',cur:'\u20AC',gas:1.80,die:1.70,flag:'IT'},
-    {name:'Spain',cur:'\u20AC',gas:1.55,die:1.45,flag:'ES'},
-    {name:'Netherlands',cur:'\u20AC',gas:2.10,die:1.75,flag:'NL'},
-    {name:'UK',cur:'\u00A3',gas:1.42,die:1.48,flag:'GB'},
-    {name:'Norway',cur:'NOK',gas:19.5,die:18.8,flag:'NO'},
-    {name:'Sweden',cur:'SEK',gas:17.8,die:17.2,flag:'SE'},
-    {name:'Poland',cur:'PLN',gas:6.30,die:6.10,flag:'PL'},
-    {name:'USA',cur:'$',gas:0.92,die:0.99,flag:'US'},
-    {name:'Canada',cur:'C$',gas:1.65,die:1.72,flag:'CA'},
-    {name:'Australia',cur:'A$',gas:1.95,die:1.85,flag:'AU'},
-    {name:'Japan',cur:'\u00A5',gas:175,die:155,flag:'JP'},
-    {name:'India',cur:'\u20B9',gas:95,die:87,flag:'IN'},
-    {name:'Brazil',cur:'R$',gas:5.80,die:5.50,flag:'BR'},
-    {name:'Saudi Arabia',cur:'SAR',gas:2.33,die:1.44,flag:'SA'},
-    {name:'UAE',cur:'AED',gas:3.05,die:3.18,flag:'AE'}
+    {name:'Germany',cur:'\u20AC',gas:2.13,die:2.30,flag:'DE'},
+    {name:'Austria',cur:'\u20AC',gas:1.84,die:2.11,flag:'AT'},
+    {name:'Switzerland',cur:'CHF',gas:2.06,die:2.38,flag:'CH'},
+    {name:'France',cur:'\u20AC',gas:1.97,die:2.11,flag:'FR'},
+    {name:'Italy',cur:'\u20AC',gas:1.78,die:2.02,flag:'IT'},
+    {name:'Spain',cur:'\u20AC',gas:1.73,die:1.88,flag:'ES'},
+    {name:'Netherlands',cur:'\u20AC',gas:2.35,die:2.48,flag:'NL'},
+    {name:'Belgium',cur:'\u20AC',gas:1.80,die:2.16,flag:'BE'},
+    {name:'Denmark',cur:'\u20AC',gas:2.25,die:2.38,flag:'DK'},
+    {name:'Finland',cur:'\u20AC',gas:2.12,die:2.32,flag:'FI'},
+    {name:'Ireland',cur:'\u20AC',gas:1.89,die:2.08,flag:'IE'},
+    {name:'Portugal',cur:'\u20AC',gas:1.92,die:2.05,flag:'PT'},
+    {name:'Greece',cur:'\u20AC',gas:2.04,die:2.06,flag:'GR'},
+    {name:'UK',cur:'\u00A3',gas:1.42,die:1.64,flag:'GB'},
+    {name:'Norway',cur:'\u20AC',gas:2.38,die:2.45,flag:'NO'},
+    {name:'Sweden',cur:'\u20AC',gas:1.77,die:2.24,flag:'SE'},
+    {name:'Poland',cur:'\u20AC',gas:1.69,die:1.99,flag:'PL'},
+    {name:'Czechia',cur:'\u20AC',gas:1.69,die:1.93,flag:'CZ'},
+    {name:'Hungary',cur:'\u20AC',gas:1.58,die:1.67,flag:'HU'},
+    {name:'Croatia',cur:'\u20AC',gas:1.57,die:1.69,flag:'HR'},
+    {name:'USA',cur:'$',gas:0.95,die:1.05,flag:'US'},
+    {name:'Canada',cur:'C$',gas:1.75,die:1.85,flag:'CA'},
+    {name:'Australia',cur:'A$',gas:2.10,die:1.95,flag:'AU'},
+    {name:'Japan',cur:'\u00A5',gas:185,die:165,flag:'JP'},
+    {name:'India',cur:'\u20B9',gas:105,die:95,flag:'IN'},
+    {name:'Brazil',cur:'R$',gas:6.50,die:6.10,flag:'BR'},
+    {name:'Saudi Arabia',cur:'SAR',gas:2.55,die:1.60,flag:'SA'},
+    {name:'UAE',cur:'AED',gas:2.48,die:2.72,flag:'AE'}
   ];
   var slider=document.getElementById('tank-slider');
   var valEl=document.getElementById('tank-val');
